@@ -529,6 +529,8 @@ int afp_setforkparams(AFPObj * obj _U_, char *ibuf, size_t ibuflen,
 		      char *rbuf _U_, size_t *rbuflen)
 {
 	struct ofork *ofork;
+    struct vol *vol;
+    struct dir *dir;
 	off_t size;
 	u_int16_t ofrefnum, bitmap;
 	int err;
@@ -551,6 +553,16 @@ int afp_setforkparams(AFPObj * obj _U_, char *ibuf, size_t ibuflen,
 		    ofrefnum);
 		return (AFPERR_PARAM);
 	}
+
+    vol = ofork->of_vol;
+    if ((dir = dirlookup(vol, ofork->of_did)) == NULL) {
+        LOG(log_error, logtype_afpd, "%s: bad fork did",  of_name(ofork));
+        return AFPERR_MISC;
+    }
+    if (movecwd(vol, dir) != 0) {
+        LOG(log_error, logtype_afpd, "%s: bad fork directory", dir->d_fullpath);
+        return AFPERR_MISC;
+    }
 
 	if (ofork->of_vol->v_flags & AFPVOL_RO)
 		return AFPERR_VLOCK;
