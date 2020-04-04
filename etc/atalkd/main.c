@@ -582,7 +582,8 @@ static void as_timer(int sig _U_)
 		    }
 
 		    /* split horizon */
-		    if (rtmp->rt_iface == iface) {
+                    /* Changed from == to accomodate Asante bridge */
+		    if (rtmp->rt_iface != iface) {
 		        continue;
 		    }
 
