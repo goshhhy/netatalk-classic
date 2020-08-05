@@ -1,0 +1,3 @@
+[submodule "etc/MacIPGW"]
+	path = etc/macipgw
+	url = git@github.com:christopherkobayashi/MacIPGW.git
