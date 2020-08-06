@@ -61,7 +61,6 @@ void configfree(AFPConfig *configs, const AFPConfig *config)
         }
 
         switch (p->obj.proto) {
-#ifndef NO_DDP
         case AFPPROTO_ASP:
             free(p->obj.Obj);
             free(p->obj.Type);
@@ -69,7 +68,6 @@ void configfree(AFPConfig *configs, const AFPConfig *config)
             atp_close(((ASP) p->obj.handle)->asp_atp);
             free(p->obj.handle);
             break;
-#endif /* no afp/asp */
         case AFPPROTO_DSI:
             close(p->fd);
             free(p->obj.handle);
@@ -87,7 +85,6 @@ static void dsi_cleanup(const AFPConfig *config)
 {
 }
 
-#ifndef NO_DDP
 static void asp_cleanup(const AFPConfig *config)
 {
     /* we need to stop tickle handler */
@@ -117,7 +114,6 @@ static int asp_start(AFPConfig *config, AFPConfig *configs,
 
     return 0;
 }
-#endif /* no afp/asp */
 
 static afp_child_t *dsi_start(AFPConfig *config, AFPConfig *configs,
                               server_child *server_children)
@@ -137,7 +133,6 @@ static afp_child_t *dsi_start(AFPConfig *config, AFPConfig *configs,
     return child;
 }
 
-#ifndef NO_DDP
 static AFPConfig *ASPConfigInit(const struct afp_options *options,
                                 unsigned char *refcount)
 {
@@ -230,7 +225,6 @@ serv_free_return:
     free(config);
     return NULL;
 }
-#endif /* no afp/asp */
 
 
 static AFPConfig *DSIConfigInit(const struct afp_options *options,
@@ -305,12 +299,10 @@ static AFPConfig *AFPConfigInit(struct afp_options *options,
         return NULL;
     }
 
-#ifndef NO_DDP
     /* handle asp transports */
     if ((options->transports & AFPTRANS_DDP) &&
             (config = ASPConfigInit(options, refcount)))
         config->defoptions = defoptions;
-#endif /* NO_DDP */
 
 
     /* set signature */
