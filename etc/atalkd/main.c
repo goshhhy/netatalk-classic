@@ -295,20 +295,20 @@ static void as_timer(int sig _U_)
 		     */
 
 #if defined(__NetBSD__)
-#define STARTUP_FIRSTNET 1
-#elif defined(__Linux__)
-#define STARTUP_FIRSTNET 0
+#define OS_STARTUP_FIRSTNET 1
+#elif defined(__linux__)
+#define OS_STARTUP_FIRSTNET 0
 #else
-#error Must define OS-specific STARTUP_FIRSTNET
+#error Must define OS-specific OS_STARTUP_FIRSTNET
 #endif
 
 		    LOG(log_info, logtype_atalkd, "config for no router" );
 		      
 		    if ( iface->i_flags & IFACE_PHASE2 ) {
-			iface->i_rt->rt_firstnet = htons( STARTUP_FIRSTNET );
+			iface->i_rt->rt_firstnet = htons( OS_STARTUP_FIRSTNET );
 			iface->i_rt->rt_lastnet = htons( STARTUP_LASTNET );
 			setaddr( iface, IFACE_PHASE2, iface->i_addr.sat_addr.s_net, iface->i_addr.sat_addr.s_node,
-				htons( STARTUP_FIRSTNET ), htons( STARTUP_LASTNET ));
+				htons( OS_STARTUP_FIRSTNET ), htons( STARTUP_LASTNET ));
 		    }
 		    if ( looproute( iface, RTMP_ADD ) ) { /* -1 or 1 */
 			LOG(log_error, logtype_atalkd, "as_timer: can't route %u.%u to loopback: %s",
@@ -991,7 +991,7 @@ int main( int ac, char **av)
 		    iface->i_rt->rt_firstnet = iface->i_rt->rt_lastnet =
 			    iface->i_caddr.sat_addr.s_net;
 		} else {
-		    iface->i_rt->rt_firstnet = htons( STARTUP_FIRSTNET );
+		    iface->i_rt->rt_firstnet = htons( OS_STARTUP_FIRSTNET );
 		    iface->i_rt->rt_lastnet = htons( STARTUP_LASTNET );
 		}
 	    }
