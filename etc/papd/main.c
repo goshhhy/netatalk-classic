@@ -181,13 +181,8 @@ int main(int ac, char **av)
     defprinter.p_type = "LaserWriter";
     defprinter.p_zone = "*";
     memset(&defprinter.p_addr, 0, sizeof(defprinter.p_addr));
-#ifdef __svr4__
-    defprinter.p_flags = P_PIPED;
-    defprinter.p_printer = "/usr/bin/lp -T PS";
-#else /* __svr4__ */
     defprinter.p_flags = P_SPOOLED;
     defprinter.p_printer = "lp";
-#endif /* __svr4__ */
     defprinter.p_operator = "operator";
     defprinter.p_spool = _PATH_PAPDSPOOLDIR;
 #ifdef ABS_PRINT
@@ -258,13 +253,9 @@ int main(int ac, char **av)
     } else {
 	p++;
     }
-#ifdef ultrix
-    openlog( p, LOG_PID );
-#else /* ultrix */
     set_processname(p);
     syslog_setup(log_debug, logtype_default, logoption_ndelay | logoption_pid |
                debug ? logoption_perror : 0, logfacility_lpr );
-#endif /* ultrix */
 
     LOG(log_info, logtype_papd, "restart (%s)", version );
 #ifdef HAVE_CUPS

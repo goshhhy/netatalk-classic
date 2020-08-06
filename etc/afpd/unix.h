@@ -12,11 +12,6 @@
 #include "config.h"
 #include "volume.h"
 
-#if defined( sun ) && !defined( __svr4__ )
-#ifdef i386
-typedef int	mode_t;
-#endif /*i386*/
-#endif /*sun __svr4__*/
 
 #if defined(HAVE_SYS_VFS_H) || defined( sun ) || defined( ibm032 ) 
 #include <sys/vfs.h>
@@ -74,9 +69,6 @@ typedef int	mode_t;
 #endif /* ! NEED_QUOTACTL_WRAPPER */
 #endif /* linux || ultrix || HAVE_QUOTA_H */
 
-#ifdef __svr4__ 
-#include <sys/fs/ufs_quota.h>
-#endif /* __svr4__ */
 
 #ifdef BSD4_4
 #include <ufs/ufs/quota.h>
@@ -86,9 +78,6 @@ typedef int	mode_t;
 #include <ufs/quota.h>
 #endif /* HAVE_UFS_QUOTA_H */
 
-#ifdef _IBMR2
-#include <jfs/quota.h>
-#endif /* _IBMR2 */
 
 #include <unistd.h>
 #include <sys/types.h>

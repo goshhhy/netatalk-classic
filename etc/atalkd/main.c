@@ -57,10 +57,6 @@
 #include <atalk/paths.h>
 #include <atalk/util.h>
 
-#ifdef __svr4__
-#include <sys/sockio.h>
-#include <termios.h>
-#endif /* __svr4__ */
 
 #include "interface.h"
 #include "gate.h"
@@ -1021,12 +1017,6 @@ int main( int ac, char **av)
     set_processname("atalkd");
 
     /* do this here so that we can use ifconfig */
-#ifdef __svr4__
-    if ( plumb() < 0 ) {
-	fprintf(stderr, "can't establish STREAMS plumbing, exiting.\n" );
-	atalkd_exit( 1 );
-    }
-#endif /* __svr4__ */
 
     /* delete pre-existing interface addresses. */
 #ifdef SIOCDIFADDR
@@ -1077,12 +1067,8 @@ int main( int ac, char **av)
       exit( 0 );
     }
 
-#ifdef ultrix
-    openlog( prog, LOG_PID );
-#else /* ultrix */
     set_processname(prog);
     syslog_setup(log_debug, logtype_default, logoption_pid, logfacility_daemon );
-#endif /* ultrix */
 
     LOG(log_info, logtype_atalkd, "restart (%s)", version );
 
@@ -1346,9 +1332,7 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
 	    LOG(log_error, logtype_atalkd, "socket: %s", strerror(errno) );
 	    atalkd_exit( 1 );
 	}
-#ifndef __svr4__
 	setsockopt(ap->ap_fd, SOL_SOCKET, SO_BROADCAST, &i, sizeof(i));
-#endif /* ! __svr4 */
 
 	memset( &sat, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4

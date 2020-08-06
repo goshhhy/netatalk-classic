@@ -453,29 +453,6 @@ mountp( char *file, int *nfs)
 }
 
 #else /* __svr4__ */
-#ifdef ultrix
-/*
-* Return the block-special device name associated with the filesystem
-* on which "file" resides.  Returns NULL on failure.
-*/
-
-static char *
-special( char *file, int *nfs)
-{
-    static struct fs_data	fsd;
-
-    if ( getmnt(0, &fsd, 0, STAT_ONE, file ) < 0 ) {
-        LOG(log_info, logtype_afpd, "special: getmnt %s: %s", file, strerror(errno) );
-        return( NULL );
-    }
-
-    /* XXX: does this really detect an nfs mounted fs? */
-    if (strchr(fsd.fd_req.devname, ':'))
-        *nfs = 1;
-    return( fsd.fd_req.devname );
-}
-
-#else /* ultrix */
 #if (defined(HAVE_SYS_MOUNT_H) && !defined(__linux__)) || defined(BSD4_4) || defined(_IBMR2)
 
 static char *
@@ -543,7 +520,6 @@ special(char *file, int *nfs)
 }
 
 #endif /* BSD4_4 */
-#endif /* ultrix */
 #endif /* __svr4__ */
 
 
@@ -552,26 +528,9 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
 {
 	struct dqblk dqg;
 
-#ifdef __svr4__
-    struct quotctl      qc;
-#endif
 
     memset(&dqg, 0, sizeof(dqg));
 	
-#ifdef __svr4__
-    qc.op = Q_GETQUOTA;
-    qc.uid = uid;
-    qc.addr = (caddr_t)dq;
-    if ( ioctl( vol->v_qfd, Q_QUOTACTL, &qc ) < 0 ) {
-        return( AFPERR_PARAM );
-    }
-
-#else /* __svr4__ */
-#ifdef ultrix
-    if ( quota( Q_GETDLIM, uid, vol->v_gvs, dq ) != 0 ) {
-        return( AFPERR_PARAM );
-    }
-#else /* ultrix */
 
 #ifndef USRQUOTA
 #define USRQUOTA   0
@@ -640,8 +599,6 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
     } /* if */
 
 
-#endif /* ultrix */
-#endif /* __svr4__ */
 
     return AFP_OK;
 }
@@ -651,32 +608,6 @@ static int getquota( struct vol *vol, struct dqblk *dq, const u_int32_t bsize)
 {
     char *p;
 
-#ifdef __svr4__
-    char		buf[ MAXPATHLEN + 1];
-
-    if ( vol->v_qfd == -1 && vol->v_gvs == NULL) {
-        if (( p = mountp( vol->v_path, &vol->v_nfs)) == NULL ) {
-            LOG(log_info, logtype_afpd, "getquota: mountp %s fails", vol->v_path );
-            return( AFPERR_PARAM );
-        }
-
-        if (vol->v_nfs) {
-            if (( vol->v_gvs = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-                LOG(log_error, logtype_afpd, "getquota: malloc: %s", strerror(errno) );
-                return AFPERR_MISC;
-            }
-            strcpy( vol->v_gvs, p );
-
-        } else {
-            sprintf( buf, "%s/quotas", p );
-            if (( vol->v_qfd = open( buf, O_RDONLY, 0 )) < 0 ) {
-                LOG(log_info, logtype_afpd, "open %s: %s", buf, strerror(errno) );
-                return( AFPERR_PARAM );
-            }
-        }
-
-    }
-#else
     if ( vol->v_gvs == NULL ) {
         if (( p = special( vol->v_path, &vol->v_nfs )) == NULL ) {
             LOG(log_info, logtype_afpd, "getquota: special %s fails", vol->v_path );
@@ -689,7 +620,6 @@ static int getquota( struct vol *vol, struct dqblk *dq, const u_int32_t bsize)
         }
         strcpy( vol->v_gvs, p );
     }
-#endif
 
     return vol->v_nfs ? getnfsquota(vol, uuid, bsize, dq) :
            getfsquota(vol, uuid, dq);
@@ -708,11 +638,6 @@ static int overquota( struct dqblk *dqblk)
          dqblk->dqb_bsoftlimit == 0 ) {
         return( 0 );
     }
-#ifdef ultrix
-    if ( dqblk->dqb_bwarn ) {
-        return( 0 );
-    }
-#else /* ultrix */
     if ( gettimeofday( &tv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "overquota: gettimeofday: %s", strerror(errno) );
         return( AFPERR_PARAM );
@@ -720,7 +645,6 @@ static int overquota( struct dqblk *dqblk)
     if ( dqblk->dqb_btimelimit && dqblk->dqb_btimelimit > tv.tv_sec ) {
         return( 0 );
     }
-#endif /* ultrix */
     return( 1 );
 }
 

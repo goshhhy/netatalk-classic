@@ -22,9 +22,6 @@
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
 
-#ifdef __svr4__
-#include <sys/sockio.h>
-#endif /* __svr4__ */
 
 #include <atalk/ddp.h>
 #include <atalk/atp.h>

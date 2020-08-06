@@ -491,13 +491,11 @@ static int lp_init(struct papfile *out, struct sockaddr_at *sat)
 	    return( -1 );
 	}
 
-#ifndef SOLARIS /* flock is unsupported, I doubt this stuff works anyway with newer solaris so ignore for now */
 	if ( flock( fd, LOCK_EX ) < 0 ) {
 	    LOG(log_error, logtype_papd, "lp_init: can't lock .seq" );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
-#endif
 
 	n = 0;
 	if (( len = read( fd, buf, sizeof( buf ))) < 0 ) {

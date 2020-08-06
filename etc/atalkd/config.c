@@ -34,10 +34,6 @@
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
 
-#ifdef __svr4__
-#include <sys/sockio.h>
-#include <sys/stropts.h>
-#endif /* __svr4__ */
 
 #include <atalk/unicode.h>
 #include "interface.h"
@@ -329,20 +325,17 @@ int readconf(char *cf)
         return( -1 );
     }
 
-#ifndef __svr4__
     if (( s = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0 ) {
 	perror( "socket" );
 	fclose(conf);
 	return -1;
     }
-#endif /* __svr4__ */
 
     while ( fgets( line, sizeof( line ), conf ) != NULL ) {
 	if (( argv = parseline( line )) == NULL ) {
 	    continue;
 	}
 
-#ifndef __svr4__
 	/*
 	 * Check that av[ 0 ] is a valid interface.
 	 * Not possible under sysV.
@@ -378,7 +371,6 @@ int readconf(char *cf)
 	  goto read_conf_err;
 	}
 
-#endif /* __svr4__ */
 
 	if (( niface = newiface( argv[ 0 ] )) == NULL ) {
 	    perror( "newiface" );
@@ -437,9 +429,7 @@ int readconf(char *cf)
 	niface->i_next = NULL;
     }
 
-#ifndef __svr4__
     close( s );
-#endif /* __svr4__ */
 
     fclose( conf );
 
@@ -456,9 +446,7 @@ int readconf(char *cf)
     }
 
 read_conf_err:
-#ifndef __svr4__
     close(s);
-#endif /* __svr4__ */
     fclose(conf);
     return -1;
 }
@@ -800,65 +788,3 @@ struct interface *newiface( const char *name)
     return( niface );
 }
 
-#ifdef __svr4__
-int plumb(void)
-{
-    struct interface	*iface;
-    char		device[ MAXPATHLEN + 1], *p, *t;
-    int			fd, ppa;
-    int			digits = 0;
-
-    for ( iface = interfaces; iface != NULL; iface = iface->i_next ) {
-	if ( strcmp( iface->i_name, LOOPIFACE ) == 0 ) {
-	    continue;
-	}
-
-	strcpy( device, "/dev/" );
-	strcat( device, iface->i_name );
-	for (t = device; *t != '\0' ; ++t) {
-	    if (isdigit(*t) == 0) {
-		p = t + 1;
-	    }
-	    else {
-		digits++;
-	    }
-	}
-
-	if (digits == 0) {
-	    LOG(log_error, logtype_atalkd, "plumb: invalid device: %s", device );
-	    return -1;
-	}
-	ppa = atoi( p );
-	*p = '\0';
-
-	if (( fd = open( device, O_RDWR, 0 )) < 0 ) {
-	    LOG(log_error, logtype_atalkd, "%s: %s", device, strerror(errno) );
-	    return -1;
-	}
-	if ( ioctl( fd, I_PUSH, "ddp" ) < 0 ) {
-	    LOG(log_error, logtype_atalkd, "I_PUSH: %s", strerror(errno) );
-	    close(fd);
-	    return -1;
-	}
-	if ( ioctl( fd, IF_UNITSEL, ppa ) < 0 ) {
-	    LOG(log_error, logtype_atalkd, "IF_UNITSEL: %s", strerror(errno) );
-	    close(fd);
-	    return -1;
-	}
-
-	/* configure multicast. */
-	if (addmulti(iface->i_name, NULL) < 0) {
-	  perror(iface->i_name);
-	  fprintf(stderr,"Can't configure multicast.\n");
-	  close(fd);
-	  return -1;
-	}
-
-	LOG(log_info, logtype_atalkd, "plumbed %s%d", device, ppa );
-
-    close(fd);
-    }
-
-    return( 0 );
-}
-#endif /* __svr4__ */

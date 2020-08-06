@@ -732,9 +732,6 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     volume->v_hide = hide;
     strcpy( volume->v_path, path );
 
-#ifdef __svr4__
-    volume->v_qfd = -1;
-#endif /* __svr4__ */
     /* os X start at 1 and use network order ie. 1 2 3 */
     volume->v_vid = ++lastvid;
     volume->v_vid = htons(volume->v_vid);

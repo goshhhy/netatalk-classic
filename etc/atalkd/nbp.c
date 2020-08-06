@@ -24,9 +24,6 @@
 #include <atalk/nbp.h>
 #include <atalk/util.h>
 
-#ifdef __svr4__
-#include <sys/sockio.h>
-#endif /* __svr4__ */
 
 #include "atserv.h"
 #include "interface.h"

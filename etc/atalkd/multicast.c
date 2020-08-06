@@ -19,9 +19,6 @@
 #include <net/if.h>
 #include <atalk/logger.h>
 
-#ifdef __svr4__
-#include <sys/sockio.h>
-#endif /* __svr4__ */
 
 #include <atalk/util.h>
 #include <netatalk/endian.h>

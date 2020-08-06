@@ -20,11 +20,7 @@
 #include <atalk/atp.h>
 
 #ifdef KRB
-#ifdef SOLARIS
-#include <kerberos/krb.h>
-#else /* SOLARIS */
 #include <krb.h>
-#endif /* SOLARIS */
 #endif /* KRB */
 
 #include "file.h"
