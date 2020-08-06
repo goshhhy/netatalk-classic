@@ -88,10 +88,6 @@ typedef struct DSI {
 
   /* url registered with slpd */
 
-#ifdef USE_ZEROCONF
-  char *bonjourname;      /* server name as UTF8 maxlen MAXINSTANCENAMELEN */
-  int zeroconf_registered;
-#endif
 
   /* DSI readahead buffer used for buffered reads in dsi_peek */
   size_t dsireadbuf; /* size of the DSI readahead buffer used in dsi_peek() */

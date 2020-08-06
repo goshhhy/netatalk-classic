@@ -81,10 +81,6 @@ void configfree(AFPConfig *configs, const AFPConfig *config)
 }
 
 
-static void dsi_cleanup(const AFPConfig *config)
-{
-}
-
 static void asp_cleanup(const AFPConfig *config)
 {
     /* we need to stop tickle handler */
@@ -221,7 +217,7 @@ static AFPConfig *ASPConfigInit(const struct afp_options *options,
     return config;
 
 serv_free_return:
-                    asp_close(asp);
+    asp_close(asp);
     free(config);
     return NULL;
 }
@@ -404,12 +400,6 @@ AFPConfig *configinit(struct afp_options *cmdline)
 
     if (!have_option)
         first = AFPConfigInit(cmdline, cmdline);
-
-    /* Now register with zeroconf, we also need the volumes for that */
-    if (first && !(first->obj.options.flags & OPTION_NOZEROCONF)) {
-        load_volumes(&first->obj);
-        zeroconf_register(first);
-    }
 
     return first;
 }

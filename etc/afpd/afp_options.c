@@ -214,10 +214,6 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     /* parse toggles */
     if (strstr(buf, " -nodebug"))
         options->flags &= ~OPTION_DEBUG;
-#ifdef USE_ZEROCONF
-    if (strstr(buf, " -nozeroconf"))
-        options->flags |= OPTION_NOZEROCONF;
-#endif
     if (strstr(buf, " -nouservolfirst"))
         options->flags &= ~OPTION_USERVOLFIRST;
     if (strstr(buf, " -uservolfirst"))
@@ -578,13 +574,7 @@ static void show_version_extended(void )
 	puts( "No" );
 
 	printf( "      Zeroconf support:\t" );
-#if defined (HAVE_MDNS)
-	puts( "mDNSResponder" );
-#elif defined (HAVE_AVAHI)
-	puts( "Avahi" );
-#else
 	puts( "No" );
-#endif
 
 	printf( "  TCP wrappers support:\t" );
 #ifdef TCPWRAP
