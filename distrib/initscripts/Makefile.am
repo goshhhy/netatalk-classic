@@ -132,27 +132,6 @@ uninstall-startup:
 endif
 
 #
-# checking for "tru64" style sysv scripts:
-#
-
-if USE_TRU64
-
-sysvdir	= /etc/init.d
-sysv_SCRIPTS = netatalk
-
-$(sysv_SCRIPTS): rc.atalk.tru64
-	cp -f rc.atalk.tru64 $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
-
-install-data-hook:
-
-uninstall-hook:
-
-uninstall-startup: uninstall-am
-
-endif
-
-#
 # checking for NetBSD init scripts
 #
 
@@ -186,32 +165,6 @@ install-data-hook:
 uninstall-hook:
 
 uninstall-startup: uninstall-am
-
-endif
-
-#
-# checking for Solaris init scripts
-#
-
-if USE_SOLARIS
-
-sysvdir = /etc/init.d
-sysv_SCRIPTS = netatalk
-
-$(sysv_SCRIPTS): rc.atalk.sysv
-	cp -f rc.atalk.sysv $@
-	chmod a+x $@
-
-install-data-hook:
-	rm -f $(DESTDIR)/etc/rc2.d/S90$(sysv_SCRIPTS)
-	-ln -s ../init.d/$(sysv_SCRIPTS) $(DESTDIR)/etc/rc2.d/S90$(sysv_SCRIPTS)
-	rm -f $(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
-	-ln -s ../init.d/$(sysv_SCRIPTS) $(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
-
-uninstall-startup:
-	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS) \
-		$(DESTDIR)/etc/rc2.d/S90$(sysv_SCRIPTS) \
-		$(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
 
 endif
 
