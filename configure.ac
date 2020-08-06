@@ -117,10 +117,6 @@ rm -rf conftest*
 case $host_cpu:$atalk_cv_cc_64bit_output in
 powerpc64:yes | s390x:yes | sparc*:yes | x86_64:yes | i386:yes)
     case $target_os in
-    solaris2*)
-        AC_MSG_RESULT([yes])
-        atalk_libname="lib/64"
-        ;;
     *bsd* | dragonfly*)
         AC_MSG_RESULT([no])
         atalk_libname="lib"
@@ -566,18 +562,13 @@ dnl ac_cv_target_os is now host_os, ac_cv_target_cpu is now host_cpu
 
 dnl --------------------- determine operating system from "target"
 case "$host_os" in
-	*aix*)				this_os=aix ;;
 	*kfreebsd*-gnu)			this_os=kfreebsd-gnu ;;
 	*freebsd*) 			this_os=freebsd ;;
-	*hpux11*)			this_os=hpux11 ;;
-	*irix*)				this_os=irix ;;
 	*linux*)   			this_os=linux ;;
 	*osx*)				this_os=macosx ;;
 	*darwin*)			this_os=macosx ;;
 	*netbsd*) 			this_os=netbsd ;;
 	*openbsd*) 			this_os=openbsd ;;
-	*osf*) 				this_os=tru64 ;;
-	*solaris*) 			this_os=solaris ;;
 esac
 
 case "$host_cpu" in
@@ -731,117 +722,6 @@ if test x"$this_os" = "xopenbsd"; then
     AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
 fi
 
-dnl ----- Solaris specific -----
-if test x"$this_os" = "xsolaris"; then 
-	AC_MSG_RESULT([ * Solaris specific configuration])
-	AC_DEFINE(__svr4__, 1, [Solaris compatibility macro])
-	AC_DEFINE(_ISOC9X_SOURCE, 1, [Compatibility macro])
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
-	AC_DEFINE(SOLARIS, 1, [Solaris compatibility macro])
-    AC_DEFINE(_XOPEN_SOURCE, 600, [Solaris compilation environment])
-    AC_DEFINE(__EXTENSIONS__,  1, [Solaris compilation environment])
-	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
-	need_dash_r=yes
-	sysv_style=solaris
-
-	solaris_module=no
-	AC_MSG_CHECKING([if we can build Solaris kernel module])
-	if test -x /usr/ccs/bin/ld && test x"$netatalk_cv_ddp_enabled" = x"yes" ; then
-		solaris_module=yes
-	fi
-	AC_MSG_RESULT([$solaris_module])
-
-	COMPILE_64BIT_KMODULE=no
-	KCFLAGS=""
-	KLDFLAGS=""
-	COMPILE_KERNEL_GCC=no
-
-	if test "$solaris_module" = "yes"; then
-	   dnl Solaris kernel module stuff
-           AC_MSG_CHECKING([if we have to build a 64bit kernel module])
-
-	   # check for isainfo, if not found it has to be a 32 bit kernel (<=2.6)	
-	   if test -x /usr/bin/isainfo; then
-		# check for 64 bit platform
-		if isainfo -kv | grep '^64-bit'; then
-			COMPILE_64BIT_KMODULE=yes
-		fi
-	   fi
-
-	   AC_MSG_RESULT([$COMPILE_64BIT_KMODULE])
-
-	   if test "${GCC}" = yes; then
-		COMPILE_KERNEL_GCC=yes
-		if test "$COMPILE_64BIT_KMODULE" = yes; then
-  	        
-                        AC_MSG_CHECKING([if we can build a 64bit kernel module])
-		        
-                        case `$CC --version 2>/dev/null` in
-			[[12]].* | 3.0.*)
-				COMPILE_64BIT_KMODULE=no
-				COMPILE_KERNEL_GCC=no	
-				solaris_module=no;;
-			*)
-			       	# use for 64 bit
-				KCFLAGS="-m64"
-				#KLDFLAGS="-melf64_sparc"
-				KLDFLAGS="-64";;
-			esac	
-			
-			AC_MSG_RESULT([$COMPILE_64BIT_KMODULE])
-			
-		else
-			KCFLAGS=""
-			KLDFLAGS=""
-		fi
-		KCFLAGS="$KCFLAGS -D_KERNEL -Wall -Wstrict-prototypes"
-           else
-		if test "$COMPILE_64BIT_KMODULE" = yes; then
-                # use Sun CC (for a 64-bit kernel, uncomment " -xarch=v9 -xregs=no%appl ")
- 			KCFLAGS="-xarch=v9 -xregs=no%appl"
-			KLDFLAGS="-64"
-		else
- 			KCFLAGS=""
-			KLDFLAGS=""
-		fi
-		KCFLAGS="-D_KERNEL $KCFLAGS -mno-app-regs -munaligned-doubles -fpcc-struct-return"
-	   fi
-
-           AC_CACHE_CHECK([for timeout_id_t],netatalk_cv_HAVE_TIMEOUT_ID_T,[
-           AC_TRY_LINK([\
-#include <sys/stream.h>
-#include <sys/ddi.h>],
-[\
-timeout_id_t dummy;
-],
-netatalk_cv_HAVE_TIMEOUT_ID_T=yes,netatalk_cv_HAVE_TIMEOUT_ID_T=no,netatalk_cv_HAVE_TIMEOUT_ID_T=cross)])
-
-	   AC_DEFINE(HAVE_TIMEOUT_ID_T, test x"$netatalk_cv_HAVE_TIMEOUT_ID" = x"yes", [define for timeout_id_t])
-	fi
-
-	AC_SUBST(COMPILE_KERNEL_GCC)
-	AC_SUBST(COMPILE_64BIT_KMODULE)
-	AC_SUBST(KCFLAGS)
-	AC_SUBST(KLDFLAGS)
-fi
-
-dnl ----- Tru64 specific -----
-if test x"$this_os" = "xtru64"; then 
-	AC_MSG_RESULT([ * Tru64 specific configuration])
-	AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
-	AC_DEFINE(HAVE_64BIT_LONGS, 1, [Define if the data type long has 64 bit])
-	dnl AC_DEFINE(USE_MOUNT_H)
-	AC_DEFINE(USE_OLD_RQUOTA, 1, [Define to use old rquota])
-	dnl AC_DEFINE(USE_UFS_QUOTA_H)
-	AC_DEFINE(TRU64, 1, [Define on Tru64 platforms])
-	AC_DEFINE(_OSF_SOURCE, 1, [Define if the *passwd UAMs should be used])
-	AC_DEFINE(_XOPEN_SOURCE_EXTENDED, 1, [Define for Berkeley DB 4])
-	AC_CHECK_LIB(security,set_auth_parameters)
-	CFLAGS="-I\$(top_srcdir)/sys/tru64 $CFLAGS"
-	need_dash_r=no
-	sysv_style=tru64
-fi
-
 dnl ------ Check for sendfile() --------
 netatalk_cv_search_sendfile=yes
 AC_ARG_ENABLE(sendfile,
@@ -855,12 +735,6 @@ if test x"$netatalk_cv_search_sendfile" = x"yes"; then
    case "$host_os" in
    *linux*)
         AC_DEFINE(SENDFILE_FLAVOR_LINUX,1,[Whether linux sendfile() API is available])
-        AC_CHECK_FUNC([sendfile], [netatalk_cv_HAVE_SENDFILE=yes])
-        ;;
-
-    *solaris*)
-        AC_DEFINE(SENDFILE_FLAVOR_SOLARIS, 1, [Solaris sendfile()])
-        AC_SEARCH_LIBS(sendfile, sendfile)
         AC_CHECK_FUNC([sendfile], [netatalk_cv_HAVE_SENDFILE=yes])
         ;;
 
@@ -1042,28 +916,6 @@ if test x"$with_acl_support" = x"yes" ; then
 		AC_MSG_NOTICE(Using UnixWare ACLs)
 		AC_DEFINE(HAVE_UNIXWARE_ACLS,1,[Whether UnixWare ACLs are available])
 		;;
-	*solaris*)
-		AC_MSG_NOTICE(Using solaris ACLs)
-		AC_DEFINE(HAVE_SOLARIS_ACLS,1,[Whether solaris ACLs are available])
-		ACL_LIBS="$ACL_LIBS -lsec"
-		;;
-	*hpux*)
-		AC_MSG_NOTICE(Using HPUX ACLs)
-		AC_DEFINE(HAVE_HPUX_ACLS,1,[Whether HPUX ACLs are available])
-		;;
-	*irix*)
-		AC_MSG_NOTICE(Using IRIX ACLs)
-		AC_DEFINE(HAVE_IRIX_ACLS,1,[Whether IRIX ACLs are available])
-		;;
-	*aix*)
-		AC_MSG_NOTICE(Using AIX ACLs)
-		AC_DEFINE(HAVE_AIX_ACLS,1,[Whether AIX ACLs are available])
-		;;
-	*osf*)
-		AC_MSG_NOTICE(Using Tru64 ACLs)
-		AC_DEFINE(HAVE_TRU64_ACLS,1,[Whether Tru64 ACLs are available])
-		ACL_LIBS="$ACL_LIBS -lpacl"
-		;;
 	*darwin*)
 		AC_MSG_NOTICE(ACLs on Darwin currently not supported)
 		AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support is available])
@@ -1158,12 +1010,6 @@ case "$this_os" in
 	AC_CHECK_FUNCS([delproplist fdelproplist add_proplist_entry get_proplist_entry],,
                    [neta_cv_eas_sys_not_found=yes])
 	AC_CHECK_FUNCS([sizeof_proplist_entry],,
-                   [neta_cv_eas_sys_not_found=yes])
-  ;;
-
-  *solaris*)
-	AC_CHECK_FUNCS([attropen],
-                   [neta_cv_eas_sys_found=yes],
                    [neta_cv_eas_sys_not_found=yes])
   ;;
 
@@ -1281,7 +1127,6 @@ AC_SUBST(LIBS)
 AC_SUBST(CFLAGS)
 AC_SUBST(OVERWRITE_CONFIG)
 
-AM_CONDITIONAL(SOLARIS_MODULE, test x$solaris_module = xyes)
 AM_CONDITIONAL(COMPILE_TIMELORD, test x$compile_timelord = xyes)
 AM_CONDITIONAL(COMPILE_A2BOOT, test x$compile_a2boot = xyes)
 AM_CONDITIONAL(HAVE_LIBGCRYPT, test x$neta_cv_have_libgcrypt = xyes)
@@ -1301,8 +1146,6 @@ AM_CONDITIONAL(USE_NETBSD, test x$sysv_style = xnetbsd)
 AM_CONDITIONAL(USE_REDHAT_SYSV, test x$sysv_style = xredhat-sysv)
 AM_CONDITIONAL(USE_SUSE_SYSV, test x$sysv_style = xsuse-sysv)
 AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
-AM_CONDITIONAL(USE_TRU64, test x$sysv_style = xtru64)
-AM_CONDITIONAL(USE_SOLARIS, test x$sysv_style = xsolaris)
 AM_CONDITIONAL(USE_GENTOO, test x$sysv_style = xgentoo)
 AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
 AM_CONDITIONAL(USE_SYSTEMD, test x$sysv_style = xsystemd || test x$sysv_style = xredhat-systemd || test x$sysv_style = xsuse-systemd)
@@ -1390,9 +1233,6 @@ AC_OUTPUT([Makefile
 	sys/netatalk/Makefile
 	sys/netbsd/Makefile
 	sys/netbsd/netatalk/Makefile
-	sys/solaris/Makefile
-	sys/sunos/Makefile
-	sys/ultrix/Makefile
 	test/Makefile
 	test/afpd/Makefile
 	],
