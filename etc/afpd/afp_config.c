@@ -18,9 +18,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#ifdef USE_SRVLOC
-#include <slp.h>
-#endif /* USE_SRVLOC */
 
 #include <atalk/logger.h>
 #include <atalk/util.h>
@@ -85,101 +82,9 @@ void configfree(AFPConfig *configs, const AFPConfig *config)
     unload_volumes_and_extmap();
 }
 
-#ifdef USE_SRVLOC
-static void SRVLOC_callback(SLPHandle hslp _U_, SLPError errcode, void *cookie) {
-    *(SLPError*)cookie = errcode;
-}
-
-static char hex[17] = "0123456789abcdef";
-
-static char * srvloc_encode(const struct afp_options *options, const char *name)
-{
-	static char buf[512];
-	char *conv_name;
-	unsigned char *p;
-	unsigned int i = 0;
-#ifndef NO_DDP
-	char *Obj, *Type = "", *Zone = "";
-#endif
-
-	/* Convert name to maccharset */
-        if ((size_t)-1 ==(convert_string_allocate( options->unixcharset, options->maccharset,
-			 name, -1, &conv_name)) )
-		return (char*)name;
-
-	/* Escape characters */
-	p = conv_name;
-	while (*p && i<(sizeof(buf)-4)) {
-	    if (*p == '@')
-		break;
-	    else if (isspace(*p)) {
-	        buf[i++] = '%';
-           	buf[i++] = '2';
-           	buf[i++] = '0';
-		p++;
-	    }	
-	    else if ((!isascii(*p)) || *p <= 0x2f || *p == 0x3f ) {
-	        buf[i++] = '%';
-           	buf[i++] = hex[*p >> 4];
-           	buf[i++] = hex[*p++ & 15];
-	    }
-	    else {
-		buf[i++] = *p++;
-	    }
-	}
-	buf[i] = '\0';
-
-#ifndef NO_DDP
-	/* Add ZONE,  */
-        if (nbp_name(options->server, &Obj, &Type, &Zone )) {
-        	LOG(log_error, logtype_afpd, "srvloc_encode: can't parse %s", options->server );
-    	}
-	else {
-		snprintf( buf+i, sizeof(buf)-i-1 ,"&ZONE=%s", Zone);
-	}
-#endif
-	free (conv_name);
-
-	return buf;
-}
-#endif /* USE_SRVLOC */
 
 static void dsi_cleanup(const AFPConfig *config)
 {
-#ifdef USE_SRVLOC
-    SLPError err;
-    SLPError callbackerr;
-    SLPHandle hslp;
-    DSI *dsi = (DSI *)config->obj.handle;
-
-    /*  Do nothing if we didn't register.  */
-    if (!dsi || dsi->srvloc_url[0] == '\0')
-        return;
-
-    err = SLPOpen("en", SLP_FALSE, &hslp);
-    if (err != SLP_OK) {
-        LOG(log_error, logtype_afpd, "dsi_cleanup: Error opening SRVLOC handle");
-        goto srvloc_dereg_err;
-    }
-
-    err = SLPDereg(hslp,
-                   dsi->srvloc_url,
-                   SRVLOC_callback,
-                   &callbackerr);
-    if (err != SLP_OK) {
-        LOG(log_error, logtype_afpd, "dsi_cleanup: Error unregistering %s from SRVLOC", dsi->srvloc_url);
-        goto srvloc_dereg_err;
-    }
-
-    if (callbackerr != SLP_OK) {
-        LOG(log_error, logtype_afpd, "dsi_cleanup: Error in callback while trying to unregister %s from SRVLOC (%d)", dsi->srvloc_url, callbackerr);
-        goto srvloc_dereg_err;
-    }
-
-srvloc_dereg_err:
-    dsi->srvloc_url[0] = '\0';
-    SLPClose(hslp);
-#endif /* USE_SRVLOC */
 }
 
 #ifndef NO_DDP
@@ -364,81 +269,6 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
             getip_string((struct sockaddr *)&dsi->server), getip_port((struct sockaddr *)&dsi->server), VERSION);
     }
 
-#ifdef USE_SRVLOC
-    dsi->srvloc_url[0] = '\0';	/*  Mark that we haven't registered.  */
-    if (!(options->flags & OPTION_NOSLP)) {
-        SLPError err;
-        SLPError callbackerr;
-        SLPHandle hslp;
-        unsigned int afp_port;
-        int   l;
-        char *srvloc_hostname;
-        const char *hostname;
-
-	err = SLPOpen("en", SLP_FALSE, &hslp);
-	if (err != SLP_OK) {
-	    LOG(log_error, logtype_afpd, "DSIConfigInit: Error opening SRVLOC handle");
-	    goto srvloc_reg_err;
-	}
-
-	/* XXX We don't want to tack on the port number if we don't have to.
-	 * Why?
-	 * Well, this seems to break MacOS < 10.  If the user _really_ wants to
-	 * use a non-default port, they can, but be aware, this server might
-	 * not show up int the Network Browser.
-	 */
-	afp_port = getip_port((struct sockaddr *)&dsi->server);
-	/* If specified use the FQDN to register with srvloc, otherwise use IP. */
-	p = NULL;
-	if (options->fqdn) {
-	    hostname = options->fqdn;
-	    p = strchr(hostname, ':');
-	}	
-	else 
-	    hostname = getip_string((struct sockaddr *)&dsi->server);
-
-	srvloc_hostname = srvloc_encode(options, (options->server ? options->server : options->hostname));
-
-	if ((p) || afp_port == 548) {
-	    l = snprintf(dsi->srvloc_url, sizeof(dsi->srvloc_url), "afp://%s/?NAME=%s", hostname, srvloc_hostname);
-	}
-	else {
-	    l = snprintf(dsi->srvloc_url, sizeof(dsi->srvloc_url), "afp://%s:%d/?NAME=%s", hostname, afp_port, srvloc_hostname);
-	}
-
-	if (l == -1 || l >= (int)sizeof(dsi->srvloc_url)) {
-	    LOG(log_error, logtype_afpd, "DSIConfigInit: Hostname is too long for SRVLOC");
-	    dsi->srvloc_url[0] = '\0';
-	    goto srvloc_reg_err;
-	}
-
-	err = SLPReg(hslp,
-		     dsi->srvloc_url,
-		     SLP_LIFETIME_MAXIMUM,
-		     "afp",
-		     "",
-		     SLP_TRUE,
-		     SRVLOC_callback,
-		     &callbackerr);
-	if (err != SLP_OK) {
-	    LOG(log_error, logtype_afpd, "DSIConfigInit: Error registering %s with SRVLOC", dsi->srvloc_url);
-	    dsi->srvloc_url[0] = '\0';
-	    goto srvloc_reg_err;
-	}
-
-	if (callbackerr != SLP_OK) {
-	    LOG(log_error, logtype_afpd, "DSIConfigInit: Error in callback trying to register %s with SRVLOC", dsi->srvloc_url);
-	    dsi->srvloc_url[0] = '\0';
-	    goto srvloc_reg_err;
-	}
-
-	LOG(log_info, logtype_afpd, "Sucessfully registered %s with SRVLOC", dsi->srvloc_url);
-	config->server_cleanup = dsi_cleanup;
-
-srvloc_reg_err:
-	SLPClose(hslp);
-    }
-#endif /* USE_SRVLOC */
 
     config->fd = dsi->serversock;
     config->obj.handle = dsi;

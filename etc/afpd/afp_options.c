@@ -184,10 +184,6 @@ void afp_options_init(struct afp_options *options)
     options->volnamelen = 80; /* spec: 255, 10.1: 73, 10.4/10.5: 80 */
     options->ntdomain = NULL;
     options->ntseparator = NULL;
-#ifdef USE_SRVLOC
-    /* don't advertize slp by default */
-    options->flags |= OPTION_NOSLP;
-#endif
     options->dircachesize = DEFAULT_MAX_DIRCACHE_SIZE;
     options->flags |= OPTION_ACL2MACCESS;
     options->flags |= OPTION_UUID;
@@ -218,10 +214,6 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     /* parse toggles */
     if (strstr(buf, " -nodebug"))
         options->flags &= ~OPTION_DEBUG;
-#ifdef USE_SRVLOC
-    if (strstr(buf, " -slp"))
-        options->flags &= ~OPTION_NOSLP;
-#endif
 #ifdef USE_ZEROCONF
     if (strstr(buf, " -nozeroconf"))
         options->flags |= OPTION_NOZEROCONF;
@@ -589,11 +581,7 @@ static void show_version_extended(void )
 	show_version( );
 
 	printf( "           SLP support:\t" );
-#ifdef USE_SRVLOC
-	puts( "Yes" );
-#else
 	puts( "No" );
-#endif
 
 	printf( "      Zeroconf support:\t" );
 #if defined (HAVE_MDNS)
