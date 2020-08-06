@@ -87,9 +87,6 @@ typedef struct DSI {
   void   (*proto_close)(struct DSI *);
 
   /* url registered with slpd */
-#ifdef USE_SRVLOC
-  char srvloc_url[512];
-#endif 
 
 #ifdef USE_ZEROCONF
   char *bonjourname;      /* server name as UTF8 maxlen MAXINSTANCENAMELEN */
