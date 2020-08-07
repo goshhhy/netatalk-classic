@@ -96,27 +96,27 @@ struct macip_req {
 } __attribute__((__packed__));
 
 struct ipent {
-	int					assigned;
+	int				assigned;
 	long				timo;
-	int					retr;	
-	struct sockaddr_at	sat;
+	int				retr;	
+	struct sockaddr_at		sat;
 };
 
 struct macip_data {
-	uint32_t		net;
-	uint32_t		mask;
-	uint32_t		broadcast;
-	uint32_t		nameserver;
-	uint32_t		addr;
+	uint32_t			net;
+	uint32_t			mask;
+	uint32_t			broadcast;
+	uint32_t			nameserver;
+	uint32_t			addr;
 	int				nipent;
-	struct ipent	*ipent;
+	struct ipent			*ipent;
 	
 	int				sock;
 	ATP				atp;
 	
-	char			name[32];
-	char			type[32];
-	char			zone[32];
+	char				name[32];
+	char				type[32];
+	char				zone[32];
 };
 
 #define IPADDR(e) (e - gMacip.ipent + gMacip.net + 1)
@@ -124,13 +124,13 @@ struct macip_data {
 #define MAXZONES 256
 
 struct zones {
-	int		n;
+	int	n;
 	char	*z[MAXZONES];
 };
 
 static struct macip_data	gMacip;
-static struct zones			gZones;
-static outputfunc_t			gOutput;
+static struct zones		gZones;
+static outputfunc_t		gOutput;
 
 
 static uint16_t 
@@ -264,7 +264,7 @@ static void arp_set (uint32_t ip, struct sockaddr_at *sat) {
 static void arp_input (struct sockaddr_at *sat, char *buffer, int len) {
 	struct nbpnve *nve;
 	char			s[32];
-	uint32_t			ip;
+	uint32_t		ip;
 	
 	while ((nve = nbp_parse_lkup_repl (buffer, len)) != NULL) {
 		if (gDebug & DEBUG_MACIP)
@@ -312,8 +312,8 @@ static void ip_input (struct sockaddr_at *sat, char *buffer, int len) {
 
 void macip_output (char *buffer, int len) {
 	struct sockaddr_at	sat;
-	struct ip			*ip = (struct ip *)buffer;
-	char				ob[MACIP_MAXMTU + 1];
+	struct ip		*ip = (struct ip *)buffer;
+	char			ob[MACIP_MAXMTU + 1];
 	
 	if (len > MACIP_MAXMTU) {
 		if (gDebug & DEBUG_MACIP)
@@ -346,10 +346,10 @@ static void config_input (ATP atp, struct sockaddr_at *faddr, char *packet, int 
 	struct atp_block	atpb;
 	struct sockaddr_at	sat;
 	struct iovec		iov;
-	char				buffer[600];
+	char			buffer[600];
 	struct macip_req	*rq;
-	int 				f;
-	uint32_t				ip;
+	int 			f;
+	uint32_t		ip;
 
 	if (atp_input (atp, faddr, packet, len) < 0) {
 		if (gDebug & DEBUG_MACIP)
@@ -435,9 +435,9 @@ static void config_input (ATP atp, struct sockaddr_at *faddr, char *packet, int 
 
 void macip_input (void) {
 	struct sockaddr_at	sat;
-	char				buffer[800];
-	ssize_t				len;
-	socklen_t			flen;
+	char			buffer[800];
+	ssize_t			len;
+	socklen_t		flen;
 
 	bzero (&sat, sizeof (sat));
 #ifdef BSD4_4
@@ -513,13 +513,13 @@ static void add_zones (short n, char *buf) {
 
 static int get_zones (void) {
     struct atp_handle		*ah;
-	struct atp_block		atpb;
-	struct sockaddr_at		saddr;
+	struct atp_block	atpb;
+	struct sockaddr_at	saddr;
 	struct servent		*se;
-	char				reqdata[4], buf[ ATP_MAXDATA ];
+	char			reqdata[4], buf[ ATP_MAXDATA ];
 	struct iovec		iov;
-	short				temp, index = 0;
-	int					i;
+	short			temp, index = 0;
+	int			i;
 
 	gZones.n = 0;
 

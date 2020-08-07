@@ -65,7 +65,7 @@ static char *version = "macipgw 1.1\n"
 
 int		atsocket;
 int		tundev;
-
+int		debug = 0;
 
 static void die (int n) {
 	syslog (LOG_INFO, "going down on signal");
@@ -170,13 +170,7 @@ int main(int argc, char *argv[]) {
 	while ((c = getopt( argc, argv, "d:n:z:V" )) != EOF ) {
 		switch ( c ) {
 			case 'd':
-#if defined(DEBUG)
 				gDebug = strtol (optarg, 0, 0);
-#else
-				fprintf (stderr, "Please recompile macipgw with -DDEBUG to "
-					"use debugging.\n");
-				exit (EX_USAGE);
-#endif
 				break;
 
 			case 'n':

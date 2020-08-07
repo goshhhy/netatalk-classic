@@ -35,31 +35,57 @@
 #include <sys/param.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <stdio.h>
+#include <unistd.h>
 #undef s_net
 #include <netatalk/at.h>
 #include <atalk/ddp.h>
 #include <atalk/atp.h>
 
-/*
- * atp_internals.h declares a few functions we require; they are exported in
- * libatalk, but not declared in any public header file.  atp_internals.h
- * has been copied over from netatalk-2.2.4.
- */
 #include "atp_internals.h"
 
-#ifdef EBUG
-#include <stdio.h>
-#endif
+extern int gDebug;
 
-/*#define EBUG    
-*/
+static void print_func(u_int8_t ctrlinfo)
+{
+    switch ( ctrlinfo & ATP_FUNCMASK ) {
+    case ATP_TREQ:
+        printf( "TREQ" );
+        break;
+    case ATP_TRESP:
+        printf( "TRESP" );
+        break;
+    case ATP_TREL:
+        printf( "ANY/TREL" );
+        break;
+    case ATP_TIDANY:
+        printf( "*" );
+        break;
+    default:
+        printf( "%x", ctrlinfo & ATP_FUNCMASK );
+    }
+}
+
+void atp_print_addr(char *s, struct sockaddr_at *saddr)
+{
+    printf( "%s ", s );
+    saddr->sat_family == AF_APPLETALK ? printf( "at." ) :
+      printf( "%d.", saddr->sat_family );
+    saddr->sat_addr.s_net == ATADDR_ANYNET ? printf( "*." ) :
+      printf( "%d.", ntohs( saddr->sat_addr.s_net ));
+    saddr->sat_addr.s_node == ATADDR_ANYNODE ? printf( "*." ) :
+      printf( "%d.", saddr->sat_addr.s_node );
+    saddr->sat_port == ATADDR_ANYPORT ? printf( "*" ) :
+      printf( "%d", saddr->sat_port );
+}
+
 
 int atp_input(ATP ah, struct sockaddr_at *faddr, char *rbuf, int recvlen) {
 	struct atpbuf		*pq, *cq;
 	struct atphdr		ahdr;
-	uint16_t				rfunc;
-	uint16_t				rtid;
-	int					i;
+	uint16_t		rfunc;
+	uint16_t		rtid;
+	int			i;
 	struct atpbuf		*inbuf;
 
 	bcopy( rbuf + 1, (char *)&ahdr, sizeof( struct atphdr ));
@@ -67,13 +93,15 @@ int atp_input(ATP ah, struct sockaddr_at *faddr, char *rbuf, int recvlen) {
 		/* this is a valid ATP packet -- check for a match */
 		rfunc = ahdr.atphd_ctrlinfo & ATP_FUNCMASK;
 		rtid = ahdr.atphd_tid;
-#ifdef EBUG
-		printf( "<%d> got tid=%hu func=", getpid(), ntohs( rtid ));
-		print_func( rfunc );
-		print_addr( " from", faddr );
-		putchar( '\n' );
-		bprint( rbuf, recvlen );
-#endif
+
+		if (gDebug) {
+			printf( "<%d> got tid=%hu func=", getpid(), ntohs( rtid ));
+			print_func( rfunc );
+			atp_print_addr( " from", faddr );
+			putchar( '\n' );
+			bprint( rbuf, recvlen );
+		}
+
 		if ( rfunc == ATP_TREL ) {
 			/* remove response from sent list */
 			for ( pq = NULL, cq = ah->atph_sent; cq != NULL;
@@ -83,9 +111,8 @@ int atp_input(ATP ah, struct sockaddr_at *faddr, char *rbuf, int recvlen) {
 					break;
 			}
 			if ( cq != NULL ) {
-#ifdef EBUG
-		printf( "<%d> releasing transaction %hu\n", getpid(), ntohs( rtid ));
-#endif
+		if (gDebug)
+			printf( "<%d> releasing transaction %hu\n", getpid(), ntohs( rtid ));
 				if ( pq == NULL ) {
 					ah->atph_sent = cq->atpbuf_next;
 				} else {
@@ -100,13 +127,11 @@ int atp_input(ATP ah, struct sockaddr_at *faddr, char *rbuf, int recvlen) {
 			}
 		} else {
 			/* add packet to incoming queue */
-#ifdef EBUG
-		printf( "<%d> queuing incoming...\n", getpid() );
-#endif
+			if (gDebug)
+				printf( "<%d> queuing incoming...\n", getpid() );
 			if (( inbuf = atp_alloc_buf() ) == NULL ) {
-#ifdef EBUG
-		printf( "<%d> can't alloc buffer\n", getpid() );
-#endif
+				if (gDebug)
+					printf( "<%d> can't alloc buffer\n", getpid() );
 				return -1;
 			}
 			bcopy( (char *)faddr, (char *)&inbuf->atpbuf_addr,

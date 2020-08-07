@@ -36,15 +36,8 @@
 #include <netinet/in_systm.h>
 #include <netinet/in.h>
 
-#if defined(BSD)
 #include <net/if.h>
 #include <net/if_tun.h>
-#endif
-
-#if defined(__linux__)
-#include <linux/if.h>
-#include <linux/if_tun.h>
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,12 +52,12 @@
 
 struct tunnel {
 	int		dev;
-	char	name[32];
+	char		name[32];
 	uint32_t	net;
 	uint32_t	mask;
 };
 
-static struct tunnel gTunnel;
+static struct tunnel	gTunnel;
 
 static outputfunc_t	gOutput;
 
@@ -102,8 +95,8 @@ tunnel_route (int op, uint32_t net, uint32_t mask, uint32_t gw) {
 
 int
 tunnel_open (uint32_t net, uint32_t mask, outputfunc_t o) {
-	int					i;
-	char				s[32], *q;
+	int			i;
+	char			s[32], *q;
 #if !defined(__NetBSD__)
 	struct tuninfo		ti;
 #endif
@@ -218,7 +211,7 @@ tunnel_close (void) {
 
 void tunnel_input (void) {
 	char	buffer[600];
-	int		i;
+	int	i;
 	
 	i = read (gTunnel.dev, buffer, sizeof (buffer));
 	if (i < 0) {

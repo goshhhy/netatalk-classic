@@ -48,6 +48,7 @@
 #include <sys/socket.h>
 #include <sys/signal.h>
 #include <sys/time.h>
+#include <stdio.h>
 #include <string.h>
 #include <netatalk/at.h>
 #include <atalk/ddp.h>
@@ -55,6 +56,7 @@
 
 #include "nbp_lkup_async.h"
 
+extern int gDebug;
 extern int nbp_parse (char *, struct nbpnve *, int);
 
 static char *nbp_addstring (char *p, char *s) {
@@ -87,12 +89,12 @@ static char *nbp_addtuple (char *p, struct sockaddr_at addr,
 }
 
 int nbp_lookup_req (int s, char *name, char *type, char *zone) {
-	static int			rqid = 1;
-	static int			nbp_port = 0;
+	static int		rqid = 1;
+	static int		nbp_port = 0;
 	struct sockaddr_at	addr;
-	socklen_t			i;
-	char				buffer[500];
-	char				*p = buffer;
+	socklen_t		i;
+	char			buffer[500];
+	char			*p = buffer;
 	struct nbphdr		nh;
 	struct servent		*se;
 
@@ -125,9 +127,9 @@ int nbp_lookup_req (int s, char *name, char *type, char *zone) {
 	}
 	addr.sat_port = nbp_port;
 
-#ifdef EBUG
-	printf ("looking up '%s:%s@%s'\n", name, type, zone);
-#endif
+	if (gDebug)
+		printf ("looking up '%s:%s@%s'\n", name, type, zone);
+
 	if ( sendto( s, buffer, p-buffer, 0, (struct sockaddr *)&addr,
 			sizeof( struct sockaddr_at )) < 0 ) {
 		return( -1 );
@@ -136,11 +138,11 @@ int nbp_lookup_req (int s, char *name, char *type, char *zone) {
 }
 
 struct nbpnve *nbp_parse_lkup_repl (char *buffer, int len) {
-	static char				*lastbuffer = 0;
-	static char				*nexttuple  = 0;
+	static char		*lastbuffer = NULL;
+	static char		*nexttuple  = NULL;
 	static struct nbpnve	nve;
-	struct nbphdr			*nh;
-	int						i;
+	struct nbphdr		*nh;
+	int			i;
 
 	if (lastbuffer != buffer) {		/* new packet */
 		lastbuffer = buffer;
@@ -163,70 +165,15 @@ struct nbpnve *nbp_parse_lkup_repl (char *buffer, int len) {
 	i = nbp_parse (nexttuple, &nve, len);
 	if (i >= 0) {
 		nexttuple += len - i;
-#ifdef EBUG
-	printf ("received nbp entry '%0.*s:%0.*s@%0.*s'\n", 
-		nve.nn_objlen, nve.nn_obj,
-		nve.nn_typelen, nve.nn_type,
-		nve.nn_zonelen, nve.nn_zone);
-#endif
+
+	if (gDebug)
+		printf ("received nbp entry '%0.*s:%0.*s@%0.*s'\n", 
+			nve.nn_objlen, nve.nn_obj,
+			nve.nn_typelen, nve.nn_type,
+			nve.nn_zonelen, nve.nn_zone);
 		return &nve;
 	}
 	lastbuffer = 0;
 	nexttuple = 0;
 	return 0;
 }
-
-
-#ifdef undef
-	struct sockaddr_at		addr;
-	struct itimerval		it, oit;
-	struct sigaction		sv, osv;
-	struct nbpnve		nve;
-	char				*data;
-	int						s, namelen, cnt, tries, sc, cc, i;
-
-
-
-
- 			while (( i = nbp_parse( data, &nve, cc )) >= 0 ) {
-				data += cc - i;
-				cc = i;
-				/*
-				 * Check to see if nve is already in nn. If not,
-				 * put it in, and increment cnt.
-				 */
-				for ( i = 0; i < cnt; i++ ) {
-					if ( nbp_match( &nve, &nn[ i ],
-							NBPMATCH_NOZONE|NBPMATCH_NOGLOB )) {
-						break;
-					}
-				}
-				if ( i == cnt ) {
-					nn[ cnt++ ] = nve;
-				}
-				if ( cnt == nncnt ) {
-					tries = 0;
-					break;
-				}
-			}
-			if ( cnt == nncnt ) {
-				tries = 0;
-				break;
-			}
-		}
-		tries--;
-	}
-
-	if ( setitimer( ITIMER_REAL, &oit, 0 ) < 0 ) {
-		return( -1 );
-	}
-
-	if ( sigaction( SIGALRM, &osv, 0 ) < 0 ) {
-		return( -1 );
-	}
-
-	close( s );
-	errno = 0;
-	return( cnt );
-}
-#endif
