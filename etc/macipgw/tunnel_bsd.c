@@ -24,6 +24,9 @@
  * SUCH DAMAGE.
  */
 
+#include "config.h"
+
+#if defined(BSD4_4)
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -234,3 +237,5 @@ void tunnel_output (char *buffer, int len) {
 	if (gDebug & DEBUG_TUNNEL)
 		printf ("sent packet into tunnel.\n");
 }
+
+#endif /* BSD4_4 */
