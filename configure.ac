@@ -1,6 +1,6 @@
 dnl configure.in for netatalk-classic
 
-AC_INIT(netatalk-classic, classic)
+AC_INIT([netatalk-classic], [m4_esyscmd([echo -n `cat VERSION`])])
 
 NETATALK_VERSION=`cat $srcdir/VERSION`
 AC_SUBST(NETATALK_VERSION)
