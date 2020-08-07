@@ -512,7 +512,7 @@ static void show_version( void )
 {
 	int num, i;
 
-	printf( "afpd %s - Apple Filing Protocol (AFP) daemon of Netatalk\n\n", VERSION );
+	printf( "afpd %s - Apple Filing Protocol (AFP) daemon of %s\n\n", VERSION, PACKAGE );
 
 	puts( "This program is free software; you can redistribute it and/or modify it under" );
 	puts( "the terms of the GNU General Public License as published by the Free Software" );
@@ -568,12 +568,6 @@ static void show_version_extended(void )
 {
 	show_version( );
 
-	printf( "           SLP support:\t" );
-	puts( "No" );
-
-	printf( "      Zeroconf support:\t" );
-	puts( "No" );
-
 	printf( "  TCP wrappers support:\t" );
 #ifdef TCPWRAP
 	puts( "Yes" );
@@ -608,9 +602,6 @@ static void show_version_extended(void )
 #else
 	puts( "No" );
 #endif
-
-	printf( "        Dropbox kludge:\t" );
-	puts( "No" );
 
 	printf( "  Force volume uid/gid:\t" );
 #ifdef FORCE_UIDGID
