@@ -38,7 +38,6 @@
 #include "status.h"
 #include "fork.h"
 #include "uam_auth.h"
-#include "afp_zeroconf.h"
 
 #define AFP_LISTENERS 32
 #define FDSET_SAFETY  5

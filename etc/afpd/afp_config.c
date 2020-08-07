@@ -36,7 +36,6 @@
 #include "uam_auth.h"
 #include "status.h"
 #include "volume.h"
-#include "afp_zeroconf.h"
 
 #define LINESIZE 1024  
 
