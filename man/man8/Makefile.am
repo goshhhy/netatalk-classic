@@ -10,7 +10,7 @@ SUFFIXES = .tmpl .
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
 	    -e s@:LIBDIR:@${libdir}@ \
 	    -e s@:LIBEXECDIR:@${libexecdir}@ \
-	    -e s@:NETATALK_VERSION:@${NETATALK_VERSION}@ \
+	    -e s@:VERSION:@${VERSION}@ \
 	    <$< >$@
 
 NONGENERATED_MANS = timelord.8 macipgw.8
