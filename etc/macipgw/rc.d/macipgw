@@ -9,7 +9,7 @@
 
 name="macipgw"
 rcvar=$name
-command="/usr/pkg/bin/macipgw"
+command="/usr/pkg/sbin/macipgw"
 command_args="-z Ryuuu -n 192.168.1.254 192.168.3.0 255.255.255.0"
 
 load_rc_config $name
