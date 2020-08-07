@@ -38,6 +38,7 @@
 
 struct ziptab	*ziptab = NULL, *ziplast = NULL;
 
+extern int debug;
 
 static int zonecheck(struct rtmptab *rtmp, struct interface *iface)
 {
@@ -731,10 +732,9 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 	    break;
 
 	case ZIPOP_NOTIFY :
-#ifdef DEBUG
-	    printf( "zip notify from %u.%u\n", ntohs( from->sat_addr.s_net ),
+	    if ( debug ) 
+	        printf( "zip notify from %u.%u\n", ntohs( from->sat_addr.s_net ),
 		    from->sat_addr.s_node );
-#endif /* DEBUG */
 	    break;
 
 	default :
