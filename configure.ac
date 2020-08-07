@@ -1122,6 +1122,7 @@ AC_OUTPUT([Makefile
 	etc/afpd/Makefile
 	etc/atalkd/Makefile
 	etc/cnid_dbd/Makefile
+	etc/macipgw/Makefile
 	etc/uams/Makefile
 	etc/uams/uams_krb4/Makefile
 	etc/papd/Makefile
