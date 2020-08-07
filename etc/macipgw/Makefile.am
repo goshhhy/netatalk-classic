@@ -26,7 +26,6 @@ macipgw_CFLAGS = \
 
 noinst_HEADERS = \
 	atp_input.h \
-	atp_internals.h \
 	common.h \
 	macip.h \
 	nbp_lkup_async.h \
