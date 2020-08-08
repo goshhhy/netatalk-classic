@@ -586,7 +586,6 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
 	bstring fullpath = NULL;
 	char *upath = NULL, *mpath;
 	cnid_t cnid, pdid;
-	size_t maxpath;
 	int buflen = 12 + MAXPATHLEN + 1;
 	int utf8;
 	int err = 0;
@@ -644,7 +643,6 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
 	}
 
 	utf8 = utf8_encoding();
-	maxpath = (utf8) ? MAXPATHLEN - 7 : 255;
 
 	/* Get it from the database */
 	cnid = did;
@@ -1057,7 +1055,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir,
 void dir_free_invalid_q(void)
 {
 	struct dir *dir;
-	while (dir = (struct dir *) dequeue(invalid_dircache_entries))
+	while ( (dir = (struct dir *) dequeue(invalid_dircache_entries)) )
 		dir_free(dir);
 }
 
@@ -1938,16 +1936,20 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap,
 	char *upath;
 	struct dir *dir;
 	int bit, isad = 1;
-	int cdate, bdate;
-	int owner, group;
-	u_int16_t ashort, bshort, oshort;
+	int cdate = 0;
+	int bdate = 0;
+	int owner = 0;
+	int group = 0;
+	u_int16_t ashort = 0;
+	u_int16_t bshort = 0;
+	u_int16_t oshort = 0;
 	int err = AFP_OK;
 	int change_mdate = 0;
 	int change_parent_mdate = 0;
 	int newdate = 0;
 	u_int16_t bitmap = d_bitmap;
 	u_char finder_buf[32];
-	u_int32_t upriv;
+	u_int32_t upriv = 0;
 	mode_t mpriv = 0;
 	u_int16_t upriv_bit = 0;
 
