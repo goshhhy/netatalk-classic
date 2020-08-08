@@ -41,6 +41,7 @@
 #include <netatalk/at.h>
 #include <atalk/ddp.h>
 #include <atalk/atp.h>
+#include <atalk/util.h>
 
 #include "atp_internals.h"
 
