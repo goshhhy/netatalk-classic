@@ -1026,7 +1026,6 @@ AC_OUTPUT([Makefile
 	libatalk/cnid/dbd/Makefile
 	libatalk/cnid/tdb/Makefile
 	libatalk/compat/Makefile
-	libatalk/dsi/Makefile
 	libatalk/nbp/Makefile
 	libatalk/netddp/Makefile
 	libatalk/util/Makefile
