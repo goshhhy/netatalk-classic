@@ -2267,7 +2267,7 @@ static void check_ea_sys_support(struct vol *vol)
 			return;
 		}
 
-		mkstemp(eaname);
+		mktemp(eaname);
 
 		process_uid = geteuid();
 		if (process_uid)
