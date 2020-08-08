@@ -475,7 +475,6 @@ static void check_saved_close_events(int fmodwait)
 
 void fce_pending_events(AFPObj * obj)
 {
-	vol_fce_tm_event();
 	check_saved_close_events(obj->options.fce_fmodwait);
 }
 

@@ -659,7 +659,7 @@ static int creatvol(AFPObj * obj, struct passwd *pwd, char *path, char *name, st
 
 	/* suffix for mangling use (lastvid + 1)   */
 	/* because v_vid has not been decided yet. */
-	suffixlen = sprintf(suffix, "%c%X", MANGLE_CHAR, lastvid + 1);
+	suffixlen = snprintf(suffix, sizeof(suffix), "%c%X", MANGLE_CHAR, lastvid + 1);
 
 	vlen = strlen(name);
 
@@ -1586,182 +1586,18 @@ static void volume_unlink(struct vol *volume)
 	}
 }
 
-/*!
- * Read band-size info from Info.plist XML file of an TM sparsebundle
- *
- * @param path   (r) path to Info.plist file
- * @return           band-size in bytes, -1 on error
- */
-static long long int get_tm_bandsize(const char *path)
-{
-	EC_INIT;
-	FILE *file = NULL;
-	char buf[512];
-	long long int bandsize = -1;
-
-	EC_NULL_LOGSTR(file = fopen(path, "r"),
-		       "get_tm_bandsize(\"%s\"): %s",
-		       path, strerror(errno));
-
-	while (fgets(buf, sizeof(buf), file) != NULL) {
-		if (strstr(buf, "band-size") == NULL)
-			continue;
-
-		if (fscanf(file, " <integer>%lld</integer>", &bandsize) !=
-		    1) {
-			LOG(log_error, logtype_afpd,
-			    "get_tm_bandsize(\"%s\"): can't parse band-size",
-			    path);
-			EC_FAIL;
-		}
-		break;
-	}
-
-      EC_CLEANUP:
-	if (file)
-		fclose(file);
-	LOG(log_debug, logtype_afpd,
-	    "get_tm_bandsize(\"%s\"): bandsize: %lld", path, bandsize);
-	return bandsize;
-}
-
-/*!
- * Return number on entries in a directory
- *
- * @param path   (r) path to dir
- * @return           number of entries, -1 on error
- */
-static long long int get_tm_bands(const char *path)
-{
-	EC_INIT;
-	long long int count = 0;
-	DIR *dir = NULL;
-	const struct dirent *entry;
-
-	EC_NULL(dir = opendir(path));
-
-	while ((entry = readdir(dir)) != NULL)
-		count++;
-	count -= 2;		/* All OSens I'm aware of return "." and "..", so just substract them, avoiding string comparison in loop */
-
-      EC_CLEANUP:
-	if (dir)
-		closedir(dir);
-	if (ret != 0)
-		return -1;
-	return count;
-}
-
-/*!
- * Calculate used size of a TimeMachine volume
- *
- * This assumes that the volume is used only for TimeMachine.
- *
- * 1) readdir(path of volume)
- * 2) for every element that matches regex "\(.*\)\.sparsebundle$" :
- * 3) parse "\1.sparsebundle/Info.plist" and read the band-size XML key integer value
- * 4) readdir "\1.sparsebundle/bands/" counting files
- * 5) calculate used size as: (file_count - 1) * band-size
- *
- * The result of the calculation is returned in "volume->v_tm_used".
- * "volume->v_appended" gets reset to 0.
- * "volume->v_tm_cachetime" is updated with the current time from time(NULL).
- *
- * "volume->v_tm_used" is cached for TM_USED_CACHETIME seconds and updated by
- * "volume->v_appended". The latter is increased by X every time the client
- * appends X bytes to a file (in fork.c).
- *
- * @param vol     (rw) volume to calculate
- * @return             0 on success, -1 on error
- */
-#define TM_USED_CACHETIME 60	/* cache for 60 seconds */
-static int get_tm_used(struct vol *restrict vol)
-{
-	EC_INIT;
-	long long int bandsize;
-	VolSpace used = 0;
-	bstring infoplist = NULL;
-	bstring bandsdir = NULL;
-	DIR *dir = NULL;
-	const struct dirent *entry;
-	const char *p;
-	struct stat st;
-	long int links;
-	time_t now = time(NULL);
-
-	if (vol->v_tm_cachetime
-	    && ((vol->v_tm_cachetime + TM_USED_CACHETIME) >= now)) {
-		if (vol->v_tm_used == -1)
-			EC_FAIL;
-		vol->v_tm_used += vol->v_appended;
-		vol->v_appended = 0;
-		LOG(log_debug, logtype_afpd,
-		    "getused(\"%s\"): cached: %" PRIu64 " bytes",
-		    vol->v_path, vol->v_tm_used);
-		return 0;
-	}
-
-	vol->v_tm_cachetime = now;
-
-	EC_NULL(dir = opendir(vol->v_path));
-
-	while ((entry = readdir(dir)) != NULL) {
-		if (((p = strstr(entry->d_name, "sparsebundle")) != NULL)
-		    && (strlen(entry->d_name) ==
-			(p + strlen("sparsebundle") - entry->d_name))) {
-
-			EC_NULL_LOG(infoplist =
-				    bformat("%s/%s/%s", vol->v_path,
-					    entry->d_name, "Info.plist"));
-
-			if ((bandsize =
-			     get_tm_bandsize(cfrombstr(infoplist))) == -1)
-				continue;
-
-			EC_NULL_LOG(bandsdir =
-				    bformat("%s/%s/%s/", vol->v_path,
-					    entry->d_name, "bands"));
-
-			if ((links =
-			     get_tm_bands(cfrombstr(bandsdir))) == -1)
-				continue;
-
-			used += (links - 1) * bandsize;
-			LOG(log_debug, logtype_afpd,
-			    "getused(\"%s\"): bands: %" PRIu64 " bytes",
-			    cfrombstr(bandsdir), used);
-		}
-	}
-
-	vol->v_tm_used = used;
-
-      EC_CLEANUP:
-	if (infoplist)
-		bdestroy(infoplist);
-	if (bandsdir)
-		bdestroy(bandsdir);
-	if (dir)
-		closedir(dir);
-
-	LOG(log_debug, logtype_afpd, "getused(\"%s\"): %" PRIu64 " bytes",
-	    vol->v_path, vol->v_tm_used);
-
-	EC_EXIT;
-}
-
 static int getvolspace(struct vol *vol,
 		       u_int32_t * bfree, u_int32_t * btotal,
 		       VolSpace * xbfree, VolSpace * xbtotal,
 		       u_int32_t * bsize)
 {
-	int spaceflag, rc;
+	int rc;
 	u_int32_t maxsize;
-	VolSpace used;
 #ifndef NO_QUOTA_SUPPORT
+	VolSpace used;
 	VolSpace qfree, qtotal;
 #endif
 
-	spaceflag = AFPVOL_GVSMASK & vol->v_flags;
 	/* report up to 2GB if afp version is < 2.2 (4GB if not) */
 	maxsize = (vol->v_flags & AFPVOL_A2VOL) ? 0x01fffe00 :
 	    (((afp_version < 22) || (vol->v_flags & AFPVOL_LIMITSIZE))
@@ -1774,6 +1610,7 @@ static int getvolspace(struct vol *vol,
 	}
 
 #ifndef NO_QUOTA_SUPPORT
+	spaceflag = AFPVOL_GVSMASK & vol->v_flags;
 	if (spaceflag == AFPVOL_NONE || spaceflag == AFPVOL_UQUOTA) {
 		if (uquota_getvolspace(vol, &qfree, &qtotal, *bsize) ==
 		    AFP_OK) {
@@ -1788,11 +1625,7 @@ static int getvolspace(struct vol *vol,
 #endif
 	vol->v_flags = (~AFPVOL_GVSMASK & vol->v_flags) | AFPVOL_USTATFS;
 
-      getvolspace_done:
 	if (vol->v_limitsize) {
-		if (get_tm_used(vol) != 0)
-			return AFPERR_MISC;
-
 		*xbtotal = MIN(*xbtotal, (vol->v_limitsize * 1024 * 1024));
 		*xbfree =
 		    MIN(*xbfree,
@@ -1811,24 +1644,6 @@ static int getvolspace(struct vol *vol,
 }
 
 #define FCE_TM_DELTA 10		/* send notification every 10 seconds */
-void vol_fce_tm_event(void)
-{
-	static time_t last;
-	time_t now = time(NULL);
-	struct vol *vol = Volumes;
-
-	if ((last + FCE_TM_DELTA) < now) {
-		last = now;
-		for (; vol; vol = vol->v_next) {
-			if (vol->v_flags & AFPVOL_TM)
-				(void) fce_register_tm_size(vol->v_path,
-							    vol->
-							    v_tm_used +
-							    vol->
-							    v_appended);
-		}
-	}
-}
 
 /* -----------------------
  * set volume creation date
