@@ -8,7 +8,6 @@ noinst_PROGRAMS = hash fce
 afpd_SOURCES = \
 	afp_asp.c \
 	afp_config.c \
-	afp_dsi.c \
 	afp_options.c \
 	afp_util.c \
 	afprun.c \

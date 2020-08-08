@@ -23,7 +23,6 @@
 #include <sys/socket.h>
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
-#include <atalk/dsi.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/afp.h>
@@ -219,10 +218,6 @@ int afp_addicon(AFPObj * obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 	 */
       addicon_err:
 	if (cc < 0) {
-		if (obj->proto == AFPPROTO_DSI) {
-			dsi_writeinit(obj->handle, rbuf, buflen);
-			dsi_writeflush(obj->handle);
-		}
 		return cc;
 	}
 
@@ -264,45 +259,6 @@ int afp_addicon(AFPObj * obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 								       fcreator),
 			    strerror(errno));
 			return (AFPERR_PARAM);
-		}
-		break;
-	case AFPPROTO_DSI:
-		{
-			DSI *dsi = obj->handle;
-
-			iovcnt = dsi_writeinit(dsi, rbuf, buflen);
-
-			/* add headers at end of file */
-			if ((cc == 0)
-			    && (write(si.sdt_fd, imh, sizeof(imh)) < 0)) {
-				LOG(log_error, logtype_afpd,
-				    "afp_addicon(%s): write: %s",
-				    icon_dtfile(vol, fcreator),
-				    strerror(errno));
-				dsi_writeflush(dsi);
-				return AFPERR_PARAM;
-			}
-
-			if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-				LOG(log_error, logtype_afpd,
-				    "afp_addicon(%s): write: %s",
-				    icon_dtfile(vol, fcreator),
-				    strerror(errno));
-				dsi_writeflush(dsi);
-				return AFPERR_PARAM;
-			}
-
-			while ((iovcnt = dsi_write(dsi, rbuf, buflen))) {
-				if ((cc =
-				     write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-					LOG(log_error, logtype_afpd,
-					    "afp_addicon(%s): write: %s",
-					    icon_dtfile(vol, fcreator),
-					    strerror(errno));
-					dsi_writeflush(dsi);
-					return AFPERR_PARAM;
-				}
-			}
 		}
 		break;
 	}
@@ -516,70 +472,11 @@ int afp_geticon(AFPObj * obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 #define min(a,b)	((a)<(b)?(a):(b))
 	rc = min(bsize, rsize);
 
-	if ((obj->proto == AFPPROTO_DSI) && (buflen < rc)) {
-		DSI *dsi = obj->handle;
-		struct stat st;
-		off_t size;
-
-		size = (fstat(si.sdt_fd, &st) < 0) ? 0 : st.st_size;
-		if (size < rc + offset) {
-			return AFPERR_PARAM;
-		}
-
-		if ((buflen =
-		     dsi_readinit(dsi, rbuf, buflen, rc, AFP_OK)) < 0)
-			goto geticon_exit;
-
-		*rbuflen = buflen;
-		/* do to the streaming nature, we have to exit if we encounter
-		 * a problem. much confusion results otherwise. */
-		while (*rbuflen > 0) {
-#ifdef WITH_SENDFILE
-			if (!obj->options.flags & OPTION_DEBUG) {
-				if (dsi_stream_read_file
-				    (dsi, si.sdt_fd, offset,
-				     dsi->datasize) < 0) {
-					switch (errno) {
-					case ENOSYS:
-					case EINVAL:	/* there's no guarantee that all fs support sendfile */
-						break;
-					default:
-						goto geticon_exit;
-					}
-				} else {
-					dsi_readdone(dsi);
-					return AFP_OK;
-				}
-			}
-#endif
-			buflen = read(si.sdt_fd, rbuf, *rbuflen);
-			if (buflen < 0)
-				goto geticon_exit;
-
-			/* dsi_read() also returns buffer size of next allocation */
-			buflen = dsi_read(dsi, rbuf, buflen);	/* send it off */
-			if (buflen < 0)
-				goto geticon_exit;
-
-			*rbuflen = buflen;
-		}
-
-		dsi_readdone(dsi);
-		return AFP_OK;
-
-	      geticon_exit:
-		LOG(log_error, logtype_afpd, "afp_geticon(%s): %s",
-		    icon_dtfile(vol, fcreator), strerror(errno));
-		dsi_readdone(dsi);
-		obj->exit(EXITERR_SYS);
-		return AFP_OK;
-
-	} else {
-		if (read(si.sdt_fd, rbuf, rc) < rc) {
-			return (AFPERR_PARAM);
-		}
-		*rbuflen = rc;
+	if (read(si.sdt_fd, rbuf, rc) < rc) {
+		return (AFPERR_PARAM);
 	}
+	*rbuflen = rc;
+
 	return AFP_OK;
 }
 

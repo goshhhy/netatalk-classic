@@ -65,10 +65,6 @@ void configfree(AFPConfig * configs, const AFPConfig * config)
 			atp_close(((ASP) p->obj.handle)->asp_atp);
 			free(p->obj.handle);
 			break;
-		case AFPPROTO_DSI:
-			close(p->fd);
-			free(p->obj.handle);
-			break;
 		}
 		free(p);
 	}
@@ -107,24 +103,6 @@ static int asp_start(AFPConfig * config, AFPConfig * configs,
 	}
 
 	return 0;
-}
-
-static afp_child_t *dsi_start(AFPConfig * config, AFPConfig * configs,
-			      server_child * server_children)
-{
-	DSI *dsi = config->obj.handle;
-	afp_child_t *child = NULL;
-
-	if (!(child = dsi_getsession(dsi,
-				     server_children,
-				     config->obj.options.tickleval))) {
-		/* we've forked. */
-		configfree(configs, config);
-		afp_over_dsi(&config->obj);	/* start a session */
-		exit(0);
-	}
-
-	return child;
 }
 
 static AFPConfig *ASPConfigInit(const struct afp_options *options,
@@ -229,70 +207,6 @@ static AFPConfig *ASPConfigInit(const struct afp_options *options,
 }
 
 
-static AFPConfig *DSIConfigInit(const struct afp_options *options,
-				unsigned char *refcount,
-				const dsi_proto protocol)
-{
-	AFPConfig *config;
-	DSI *dsi;
-	char *p, *q;
-
-	if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
-		LOG(log_error, logtype_afpd,
-		    "DSIConfigInit: malloc(config): %s", strerror(errno));
-		return NULL;
-	}
-
-	LOG(log_debug, logtype_afpd,
-	    "DSIConfigInit: hostname: %s, ip/port: %s/%s, ",
-	    options->hostname,
-	    options->ipaddr ? options->ipaddr : "default",
-	    options->port ? options->port : "548");
-
-	if ((dsi = dsi_init(protocol, "afpd", options->hostname,
-			    options->ipaddr, options->port,
-			    options->flags & OPTION_PROXY,
-			    options->server_quantum)) == NULL) {
-		LOG(log_error, logtype_afpd, "main: dsi_init: %s",
-		    strerror(errno));
-		free(config);
-		return NULL;
-	}
-	dsi->dsireadbuf = options->dsireadbuf;
-
-	if (options->flags & OPTION_PROXY) {
-		LOG(log_note, logtype_afpd,
-		    "AFP/TCP proxy initialized for %s:%d (%s)",
-		    getip_string((struct sockaddr *) &dsi->server),
-		    getip_port((struct sockaddr *) &dsi->server), VERSION);
-	} else {
-		LOG(log_note, logtype_afpd,
-		    "AFP/TCP started, advertising %s:%d (%s)",
-		    getip_string((struct sockaddr *) &dsi->server),
-		    getip_port((struct sockaddr *) &dsi->server), VERSION);
-	}
-
-
-	config->fd = dsi->serversock;
-	config->obj.handle = dsi;
-	dsi->AFPobj = &config->obj;
-	config->obj.config = config;
-	config->obj.proto = AFPPROTO_DSI;
-
-	memcpy(&config->obj.options, options, sizeof(struct afp_options));
-	/* get rid of any appletalk info. we use the fact that the DSI
-	 * stuff is done after the ASP stuff. */
-	p = config->obj.options.server;
-	if (p && (q = strchr(p, ':')))
-		*q = '\0';
-
-	config->optcount = refcount;
-	(*refcount)++;
-
-	config->server_start = dsi_start;
-	return config;
-}
-
 /* allocate server configurations. this should really store the last
  * entry in config->last or something like that. that would make
  * supporting multiple dsi transports easier. */
@@ -318,21 +232,6 @@ static AFPConfig *AFPConfigInit(struct afp_options *options,
 
 	/* set signature */
 	set_signature(options);
-
-	/* handle dsi transports and dsi proxies. we only proxy
-	 * for DSI connections. */
-
-	/* this should have something like the following:
-	 * for (i=mindsi; i < maxdsi; i++)
-	 *   if (options->transports & (1 << i) && 
-	 *     (next = DSIConfigInit(options, refcount, i)))
-	 *     next->defoptions = defoptions;
-	 */
-	if ((options->transports & AFPTRANS_TCP) &&
-	    (((options->flags & OPTION_PROXY) == 0) ||
-	     ((options->flags & OPTION_PROXY) && config))
-	    && (next = DSIConfigInit(options, refcount, DSI_TCPIP)))
-		next->defoptions = defoptions;
 
 	/* load in all the authentication modules. we can load the same
 	   things multiple times if necessary. however, loading different

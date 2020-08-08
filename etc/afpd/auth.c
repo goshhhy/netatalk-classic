@@ -247,15 +247,6 @@ static int set_auth_switch(int expired)
 					     UAM_AFPSERVER_POSTAUTH,
 					     afp_disconnect, NULL);
 
-		case 22:
-			/*
-			 * If first connection to a server is done in classic AFP2.2 version is used
-			 * but OSX uses AFP3.x FPzzz command !
-			 */
-			uam_afpserver_action(AFP_ZZZ,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_zzz, NULL);
-			break;
 		}
 	}
 
@@ -383,9 +374,6 @@ static int login(AFPObj * obj, struct passwd *pwd, void (*logout)(void),
 	/* pam_umask or similar might have changed our umask */
 	(void) umask(obj->options.umask);
 
-	/* Some PAM module might have reset our signal handlers and timer, so we need to reestablish them */
-	afp_over_dsi_sighandlers(obj);
-
 	return (AFP_OK);
 }
 
@@ -435,65 +423,6 @@ int set_groups(AFPObj * obj, struct passwd *pwd)
 	}
 
 	return 0;
-}
-
-/* ---------------------- */
-int afp_zzz(AFPObj * obj, char *ibuf, size_t ibuflen, char *rbuf,
-	    size_t *rbuflen)
-{
-	uint32_t data;
-	DSI *dsi = (DSI *) AFPobj->handle;
-
-	*rbuflen = 0;
-	ibuf += 2;
-	ibuflen -= 2;
-
-	if (ibuflen < 4)
-		return AFPERR_MISC;
-	memcpy(&data, ibuf, 4);	/* flag */
-	data = ntohl(data);
-
-	/*
-	 * Possible sleeping states:
-	 * 1) normal sleep: DSI_SLEEPING (up to 10.3)
-	 * 2) extended sleep: DSI_SLEEPING | DSI_EXTSLEEP (starting with 10.4)
-	 */
-
-	if (data & AFPZZZ_EXT_WAKEUP) {
-		/* wakeup request from exetended sleep */
-		if (dsi->flags & DSI_EXTSLEEP) {
-			LOG(log_note, logtype_afpd,
-			    "afp_zzz: waking up from extended sleep");
-			dsi->flags &= ~(DSI_SLEEPING | DSI_EXTSLEEP);
-		}
-	} else {
-		/* sleep request */
-		dsi->flags |= DSI_SLEEPING;
-		if (data & AFPZZZ_EXT_SLEEP) {
-			LOG(log_note, logtype_afpd,
-			    "afp_zzz: entering extended sleep");
-			dsi->flags |= DSI_EXTSLEEP;
-		} else {
-			LOG(log_note, logtype_afpd,
-			    "afp_zzz: entering normal sleep");
-		}
-	}
-
-	/*
-	 * According to AFP 3.3 spec we should not return anything,
-	 * but eg 10.5.8 server still returns the numbers of hours
-	 * the server is keeping the sessino (ie max sleeptime).
-	 */
-	data = obj->options.sleep / 120;	/* hours */
-	if (!data) {
-		data = 1;
-	}
-	*rbuflen = sizeof(data);
-	data = htonl(data);
-	memcpy(rbuf, &data, sizeof(data));
-	rbuf += sizeof(data);
-
-	return AFP_OK;
 }
 
 /* ---------------------- */

@@ -507,20 +507,6 @@ int uam_afp_read(void *handle, char *buf, size_t *buflen,
 			goto uam_afp_read_err;
 		return action(handle, buf, *buflen);
 		break;
-	case AFPPROTO_DSI:
-		len = dsi_writeinit(obj->handle, buf, *buflen);
-		if (!len || ((len = action(handle, buf, len)) < 0)) {
-			dsi_writeflush(obj->handle);
-			goto uam_afp_read_err;
-		}
-
-		while ((len = (dsi_write(obj->handle, buf, *buflen)))) {
-			if ((len = action(handle, buf, len)) < 0) {
-				dsi_writeflush(obj->handle);
-				goto uam_afp_read_err;
-			}
-		}
-		break;
 	default:
 		return -1;
 	}

@@ -552,15 +552,6 @@ void status_init(AFPConfig * aspconfig, AFPConfig * dsiconfig,
 		aspconfig->statuslen = statuslen;
 	}
 
-	if (dsiconfig) {
-		if ((options->flags & OPTION_CUSTOMICON) == 0) {
-			status_icon(status, apple_tcp_icon,
-				    sizeof(apple_tcp_icon), 0);
-		}
-		dsi_setstatus(dsi, status, statuslen);
-		dsiconfig->signature = status + sigoff;
-		dsiconfig->statuslen = statuslen;
-	}
 }
 
 /* set_signature()                                                    */

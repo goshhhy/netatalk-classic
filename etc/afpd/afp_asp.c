@@ -44,6 +44,8 @@
 extern int debug;
 static AFPObj *child;
 
+AFPObj *AFPobj = NULL;
+
 static void afp_authprint_remove(AFPObj *);
 
 static void afp_asp_close(AFPObj * obj)
@@ -218,7 +220,8 @@ static void afp_asp_timedown(int sig _U_)
 /* ---------------------------------
  * SIGHUP reload configuration file
 */
-extern volatile int reload_request;
+
+volatile int reload_request;
 
 static void afp_asp_reload(int sig _U_)
 {
