@@ -139,8 +139,6 @@ tunnel_open (uint32_t net, uint32_t mask, outputfunc_t o) {
 
 void
 tunnel_close (void) {
-	char cmd[2048];
-	
 	close(gTunnel.dev);
 	tunnel_route (ROUTE_DEL, gTunnel.net, gTunnel.mask, gTunnel.net+1);
 }

@@ -166,11 +166,11 @@ struct nbpnve *nbp_parse_lkup_repl (char *buffer, int len) {
 	if (i >= 0) {
 		nexttuple += len - i;
 
-	if (gDebug)
-		printf ("received nbp entry '%0.*s:%0.*s@%0.*s'\n", 
-			nve.nn_objlen, nve.nn_obj,
-			nve.nn_typelen, nve.nn_type,
-			nve.nn_zonelen, nve.nn_zone);
+		if (gDebug)
+			printf ("received nbp entry '%.*s:%.*s@%.*s'\n", 
+				nve.nn_objlen, nve.nn_obj,
+				nve.nn_typelen, nve.nn_type,
+				nve.nn_zonelen, nve.nn_zone);
 		return &nve;
 	}
 	lastbuffer = 0;
