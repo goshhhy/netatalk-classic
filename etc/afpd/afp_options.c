@@ -591,13 +591,6 @@ static void show_version_extended(void)
 {
 	show_version();
 
-	printf("  TCP wrappers support:\t");
-#ifdef TCPWRAP
-	puts("Yes");
-#else
-	puts("No");
-#endif
-
 	printf("         Quota support:\t");
 #ifndef NO_QUOTA_SUPPORT
 	puts("Yes");
