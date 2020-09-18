@@ -46,7 +46,6 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	AC_MSG_RESULT([         guest])
 	AC_MSG_RESULT([    Options:])
 	AC_MSG_RESULT([         CUPS support:            $netatalk_cv_use_cups])
-	AC_MSG_RESULT([         tcp wrapper support:     $netatalk_cv_tcpwrap])
 dnl	if test x"$netatalk_cv_linux_sendfile" != x; then
 dnl		AC_MSG_RESULT([         Linux sendfile support:  $netatalk_cv_linux_sendfile])
 dnl	fi

@@ -64,6 +64,6 @@ test_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/etc/afpd \
 
 test_LDADD = $(top_builddir)/libatalk/cnid/libcnid.la \
 	$(top_builddir)/libatalk/libatalk.la \
-	@QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@
+	@QUOTA_LIBS@ @SLP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @PTHREAD_LIBS@
 
 test_LDFLAGS = -export-dynamic
