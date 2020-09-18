@@ -245,9 +245,9 @@ struct passwd *uam_getname(void *private, char *name, const int len)
 
 	if ((size_t) -1 ==
 	    (namelen =
-	     convert_string((utf8_encoding())? CH_UTF8_MAC : obj->options.
-			    maccharset, CH_UCS2, name, -1, username,
-			    sizeof(username))))
+	     convert_string((utf8_encoding())? CH_UTF8_MAC : obj->
+			    options.maccharset, CH_UCS2, name, -1,
+			    username, sizeof(username))))
 		return NULL;
 
 	setpwent();
@@ -329,15 +329,15 @@ int uam_random_string(AFPObj * obj, char *buf, int len)
 	u_int32_t result;
 	int ret;
 	int fd;
+	struct timeval tv;
+	struct timezone tz;
+	int i;
 
 	if ((len <= 0) || (len % sizeof(result)))
 		return -1;
 
 	/* construct a random number */
 	if ((fd = open("/dev/urandom", O_RDONLY)) < 0) {
-		struct timeval tv;
-		struct timezone tz;
-		int i;
 
 		if (gettimeofday(&tv, &tz) < 0)
 			return -1;
@@ -442,9 +442,8 @@ int uam_afpserver_option(void *private, const int what, void *option,
 			     NULL, 0, 0) == 0)
 				*buf = hbuf;
 			else
-				*buf =
-				    getip_string((struct sockaddr *) &dsi->
-						 client);
+				*buf = getip_string((struct sockaddr *)
+						    &dsi->client);
 
 			break;
 		}
@@ -501,15 +500,12 @@ int uam_afp_read(void *handle, char *buf, size_t *buflen,
 	if (!obj)
 		return AFPERR_PARAM;
 
-		if ((len = asp_wrtcont(obj->handle, buf, buflen)) < 0)
-			goto uam_afp_read_err;
-		return action(handle, buf, *buflen);
-	
-	return 0;
+	if ((len = asp_wrtcont(obj->handle, buf, buflen)) < 0) {
+		*buflen = 0;
+		return len;
+	}
 
-      uam_afp_read_err:
-	*buflen = 0;
-	return len;
+	return action(handle, buf, *buflen);
 }
 
 
