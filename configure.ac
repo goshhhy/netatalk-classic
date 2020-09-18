@@ -258,8 +258,6 @@ AC_ARG_ENABLE(shell-check,
 	]
 )
 
-NETATALK_TCP_WRAPPERS
-
 AC_MSG_CHECKING([whether system (fcntl) locking should be disabled])
 AC_ARG_ENABLE(locking,
         [  --disable-locking       disable system locking],[
