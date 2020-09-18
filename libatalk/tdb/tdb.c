@@ -369,12 +369,7 @@ static int tdb_write(TDB_CONTEXT *tdb, tdb_off off, void *buf, tdb_len len)
 
 	if (tdb->map_ptr)
 		memcpy(off + (char *)tdb->map_ptr, buf, len);
-#ifdef HAVE_PWRITE
 	else if (pwrite(tdb->fd, buf, len, off) != (ssize_t)len) {
-#else
-	else if (lseek(tdb->fd, off, SEEK_SET) != off
-		 || write(tdb->fd, buf, len) != (ssize_t)len) {
-#endif
 		/* Ensure ecode is set for log fn. */
 		tdb->ecode = TDB_ERR_IO;
 		TDB_LOG((tdb, 0,"tdb_write failed at %d len=%d (%s)\n",
@@ -392,12 +387,7 @@ static int tdb_read(TDB_CONTEXT *tdb,tdb_off off,void *buf,tdb_len len,int cv)
 
 	if (tdb->map_ptr)
 		memcpy(buf, off + (char *)tdb->map_ptr, len);
-#ifdef HAVE_PREAD
 	else if (pread(tdb->fd, buf, len, off) != (ssize_t)len) {
-#else
-	else if (lseek(tdb->fd, off, SEEK_SET) != off
-		 || read(tdb->fd, buf, len) != (ssize_t)len) {
-#endif
 		/* Ensure ecode is set for log fn. */
 		tdb->ecode = TDB_ERR_IO;
 		TDB_LOG((tdb, 0,"tdb_read failed at %d len=%d (%s)\n",
@@ -726,12 +716,7 @@ static int expand_file(TDB_CONTEXT *tdb, tdb_off size, tdb_off addition)
 #else
 	char b = 0;
 
-#ifdef HAVE_PWRITE
 	if (pwrite(tdb->fd,  &b, 1, (size+addition) - 1) != 1) {
-#else
-	if (lseek(tdb->fd, (size+addition) - 1, SEEK_SET) != (size+addition) - 1 || 
-	    write(tdb->fd, &b, 1) != 1) {
-#endif
 		TDB_LOG((tdb, 0, "expand_file to %d failed (%s)\n", 
 			   size+addition, strerror(errno)));
 		return -1;
@@ -743,14 +728,7 @@ static int expand_file(TDB_CONTEXT *tdb, tdb_off size, tdb_off addition)
 	memset(buf, 0x42, sizeof(buf));
 	while (addition) {
 		int n = addition>sizeof(buf)?sizeof(buf):addition;
-#ifdef HAVE_PWRITE
 		int ret = pwrite(tdb->fd, buf, n, size);
-#else
-		int ret;
-		if (lseek(tdb->fd, size, SEEK_SET) != size)
-			return -1;
-		ret = write(tdb->fd, buf, n);
-#endif
 		if (ret != n) {
 			TDB_LOG((tdb, 0, "expand_file write of %d failed (%s)\n", 
 				   n, strerror(errno)));

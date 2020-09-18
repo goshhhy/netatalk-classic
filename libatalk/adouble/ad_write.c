@@ -25,21 +25,7 @@ ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count,
 {
 	ssize_t cc;
 
-#ifndef  HAVE_PWRITE
-	if (ad_fd->adf_off != offset) {
-		if (lseek(ad_fd->adf_fd, offset, SEEK_SET) < 0) {
-			return -1;
-		}
-		ad_fd->adf_off = offset;
-	}
-	cc = write(ad_fd->adf_fd, buf, count);
-	if (cc < 0) {
-		return -1;
-	}
-	ad_fd->adf_off += cc;
-#else
 	cc = pwrite(ad_fd->adf_fd, buf, count, offset);
-#endif
 	return cc;
 }
 
@@ -97,9 +83,6 @@ ssize_t ad_write(struct adouble *ad, const u_int32_t eid, off_t off,
 int sys_ftruncate(int fd, off_t length)
 {
 
-#ifndef  HAVE_PWRITE
-	off_t curpos;
-#endif
 	int err;
 	struct stat st;
 	char c = 0;
@@ -110,13 +93,6 @@ int sys_ftruncate(int fd, off_t length)
 	/* maybe ftruncate doesn't work if we try to extend the size */
 	err = errno;
 
-#ifndef  HAVE_PWRITE
-	/* we only care about file pointer if we don't use pwrite */
-	if ((off_t) - 1 == (curpos = lseek(fd, 0, SEEK_CUR))) {
-		errno = err;
-		return -1;
-	}
-#endif
 
 	if (fstat(fd, &st) < 0) {
 		errno = err;
@@ -138,12 +114,6 @@ int sys_ftruncate(int fd, off_t length)
 		return -1;
 	}
 
-#ifndef  HAVE_PWRITE
-	if (curpos != lseek(fd, curpos, SEEK_SET)) {
-		errno = err;
-		return -1;
-	}
-#endif
 
 	return 0;
 }
