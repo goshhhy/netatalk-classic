@@ -237,11 +237,6 @@ int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
             /* its a symlink and client requested O_NOFOLLOW */
             ret = AFPERR_BADTYPE;
             goto exit;
-#ifdef HAVE_ATTROPEN            /* Solaris */
-        case ENOATTR:
-            ret = AFP_OK;
-            goto exit;
-#endif
         default:
             LOG(log_error, logtype_afpd, "sys_list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
             ret= AFPERR_MISC;

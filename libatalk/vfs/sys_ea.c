@@ -46,10 +46,6 @@
 #include <sys/ea.h>
 #endif
 
-#ifdef HAVE_ATTROPEN
-
-#include <dirent.h>
-#endif
 
 #ifdef HAVE_SYS_EXTATTR_H
 #include <sys/extattr.h>
@@ -65,15 +61,6 @@
 #endif
 
 /******** Solaris EA helper function prototypes ********/
-#ifdef HAVE_ATTROPEN
-#define SOLARIS_ATTRMODE S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP
-static int solaris_write_xattr(int attrfd, const char *value, size_t size);
-static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size);
-static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size);
-static int solaris_unlinkat(int attrdirfd, const char *name);
-static int solaris_attropen(const char *path, const char *attrpath, int oflag, mode_t mode);
-static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode);
-#endif
 
 /**************************************************************************
  Wrappers for extented attribute calls. Based on the Linux package with
@@ -83,12 +70,8 @@ static char attr_name[256 +5] = "user.";
 
 static const char *prefix(const char *uname)
 {
-#if defined(HAVE_ATTROPEN)
-	return uname;
-#else
 	strlcpy(attr_name +5, uname, 256);
 	return attr_name;
-#endif
 }
 
 ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t size)
@@ -135,14 +118,6 @@ ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t s
 	retval = attr_get(path, attrname, (char *)value, &valuelength, flags);
 
 	return retval ? retval : valuelength;
-#elif defined(HAVE_ATTROPEN)
-	ssize_t ret = -1;
-	int attrfd = solaris_attropen(path, name, O_RDONLY, 0);
-	if (attrfd >= 0) {
-		ret = solaris_read_xattr(attrfd, value, size);
-		close(attrfd);
-	}
-	return ret;
 #else
 	errno = ENOSYS;
 	return -1;
@@ -183,14 +158,6 @@ ssize_t sys_lgetxattr (const char *path, const char *uname, void *value, size_t 
 	retval = attr_get(path, attrname, (char *)value, &valuelength, flags);
 
 	return retval ? retval : valuelength;
-#elif defined(HAVE_ATTROPEN)
-	ssize_t ret = -1;
-	int attrfd = solaris_attropen(path, name, O_RDONLY|AT_SYMLINK_NOFOLLOW, 0);
-	if (attrfd >= 0) {
-		ret = solaris_read_xattr(attrfd, value, size);
-		close(attrfd);
-	}
-	return ret;
 #else
 	errno = ENOSYS;
 	return -1;
@@ -397,14 +364,6 @@ ssize_t sys_listxattr (const char *path, char *list, size_t size)
 	return bsd_attr_list(0, arg, list, size);
 #elif defined(HAVE_ATTR_LIST) && defined(HAVE_SYS_ATTRIBUTES_H)
 	return irix_attr_list(path, 0, list, size, 0);
-#elif defined(HAVE_ATTROPEN)
-	ssize_t ret = -1;
-	int attrdirfd = solaris_attropen(path, ".", O_RDONLY, 0);
-	if (attrdirfd >= 0) {
-		ret = solaris_list_xattr(attrdirfd, list, size);
-		close(attrdirfd);
-	}
-	return ret;
 #else
 	errno = ENOSYS;
 	return -1;
@@ -433,14 +392,6 @@ ssize_t sys_llistxattr (const char *path, char *list, size_t size)
 	return bsd_attr_list(1, arg, list, size);
 #elif defined(HAVE_ATTR_LIST) && defined(HAVE_SYS_ATTRIBUTES_H)
 	return irix_attr_list(path, 0, list, size, ATTR_DONTFOLLOW);
-#elif defined(HAVE_ATTROPEN)
-	ssize_t ret = -1;
-	int attrdirfd = solaris_attropen(path, ".", O_RDONLY|AT_SYMLINK_NOFOLLOW, 0);
-	if (attrdirfd >= 0) {
-		ret = solaris_list_xattr(attrdirfd, list, size);
-		close(attrdirfd);
-	}
-	return ret;
 #else
 	errno = ENOSYS;
 	return -1;
@@ -468,14 +419,6 @@ int sys_removexattr (const char *path, const char *uname)
 	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
 
 	return attr_remove(path, attrname, flags);
-#elif defined(HAVE_ATTROPEN)
-	int ret = -1;
-	int attrdirfd = solaris_attropen(path, ".", O_RDONLY, 0);
-	if (attrdirfd >= 0) {
-		ret = solaris_unlinkat(attrdirfd, name);
-		close(attrdirfd);
-	}
-	return ret;
 #else
 	errno = ENOSYS;
 	return -1;
@@ -501,14 +444,6 @@ int sys_lremovexattr (const char *path, const char *uname)
 	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
 
 	return attr_remove(path, attrname, flags);
-#elif defined(HAVE_ATTROPEN)
-	int ret = -1;
-	int attrdirfd = solaris_attropen(path, ".", O_RDONLY|AT_SYMLINK_NOFOLLOW, 0);
-	if (attrdirfd >= 0) {
-		ret = solaris_unlinkat(attrdirfd, name);
-		close(attrdirfd);
-	}
-	return ret;
 #else
 	errno = ENOSYS;
 	return -1;
@@ -559,18 +494,6 @@ int sys_setxattr (const char *path, const char *uname, const void *value, size_t
 	if (flags & XATTR_REPLACE) myflags |= ATTR_REPLACE;
 
 	return attr_set(path, attrname, (const char *)value, size, myflags);
-#elif defined(HAVE_ATTROPEN)
-	int ret = -1;
-	int myflags = O_RDWR;
-	int attrfd;
-	if (flags & XATTR_CREATE) myflags |= O_EXCL;
-	if (!(flags & XATTR_REPLACE)) myflags |= O_CREAT;
-	attrfd = solaris_attropen(path, name, myflags, (mode_t) SOLARIS_ATTRMODE);
-	if (attrfd >= 0) {
-		ret = solaris_write_xattr(attrfd, value, size);
-		close(attrfd);
-	}
-	return ret;
 #else
 	errno = ENOSYS;
 	return -1;
@@ -620,18 +543,6 @@ int sys_lsetxattr (const char *path, const char *uname, const void *value, size_
 	if (flags & XATTR_REPLACE) myflags |= ATTR_REPLACE;
 
 	return attr_set(path, attrname, (const char *)value, size, myflags);
-#elif defined(HAVE_ATTROPEN)
-	int ret = -1;
-	int myflags = O_RDWR | AT_SYMLINK_NOFOLLOW;
-	int attrfd;
-	if (flags & XATTR_CREATE) myflags |= O_EXCL;
-	if (!(flags & XATTR_REPLACE)) myflags |= O_CREAT;
-	attrfd = solaris_attropen(path, name, myflags, (mode_t) SOLARIS_ATTRMODE);
-	if (attrfd >= 0) {
-		ret = solaris_write_xattr(attrfd, value, size);
-		close(attrfd);
-	}
-	return ret;
 #else
 	errno = ENOSYS;
 	return -1;
@@ -641,109 +552,4 @@ int sys_lsetxattr (const char *path, const char *uname, const void *value, size_
 /**************************************************************************
  helper functions for Solaris' EA support
 ****************************************************************************/
-#ifdef HAVE_ATTROPEN
-static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size)
-{
-	struct stat sbuf;
-
-	if (fstat(attrfd, &sbuf) == -1) {
-		return -1;
-	}
-
-	/* This is to return the current size of the named extended attribute */
-	if (size == 0) {
-		return sbuf.st_size;
-	}
-
-	/* check size and read xattr */
-	if (sbuf.st_size > size) {
-		return -1;
-	}
-
-	return read(attrfd, value, sbuf.st_size);
-}
-
-static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size)
-{
-	ssize_t len = 0;
-	DIR *dirp;
-	struct dirent *de;
-	int newfd = dup(attrdirfd);
-	/* CAUTION: The originating file descriptor should not be
-	            used again following the call to fdopendir().
-	            For that reason we dup() the file descriptor
-		    here to make things more clear. */
-	dirp = fdopendir(newfd);
-
-	while ((de = readdir(dirp))) {
-		size_t listlen;
-		if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..") ||
-		     !strcmp(de->d_name, "SUNWattr_ro") || !strcmp(de->d_name, "SUNWattr_rw")) 
-		{
-			/* we don't want "." and ".." here: */
-			LOG(log_maxdebug, logtype_default, "skipped EA %s\n",de->d_name);
-			continue;
-		}
-
-		listlen = strlen(de->d_name);
-		if (size == 0) {
-			/* return the current size of the list of extended attribute names*/
-			len += listlen + 1;
-		} else {
-			/* check size and copy entry + nul into list. */
-			if ((len + listlen + 1) > size) {
-				errno = ERANGE;
-				len = -1;
-				break;
-			} else {
-				strcpy(list + len, de->d_name);
-				len += listlen;
-				list[len] = '\0';
-				++len;
-			}
-		}
-	}
-
-	if (closedir(dirp) == -1) {
-		LOG(log_error, logtype_default, "closedir dirp: %s",strerror(errno));
-		return -1;
-	}
-	return len;
-}
-
-static int solaris_unlinkat(int attrdirfd, const char *name)
-{
-	if (unlinkat(attrdirfd, name, 0) == -1) {
-		return -1;
-	}
-	return 0;
-}
-
-static int solaris_attropen(const char *path, const char *attrpath, int oflag, mode_t mode)
-{
-	return attropen(path, attrpath, oflag, mode);
-}
-
-static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
-{
-	int filedes = openat(fildes, path, oflag, mode);
-	if (filedes == -1) {
-		LOG(log_error, logtype_default, "openat(\"%s\"): %s",
-            path, strerror(errno));
-	}
-	return filedes;
-}
-
-static int solaris_write_xattr(int attrfd, const char *value, size_t size)
-{
-	if ((ftruncate(attrfd, 0) == 0) && (write(attrfd, value, size) == size)) {
-		return 0;
-	} else {
-		LOG(log_error, logtype_default, "solaris_write_xattr: %s",
-            strerror(errno));
-		return -1;
-	}
-}
-
-#endif /*HAVE_ATTROPEN*/
 
