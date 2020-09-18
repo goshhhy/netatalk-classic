@@ -81,13 +81,9 @@ int netatalk_rmdir_all_errors(int dirfd, const char *name)
 {
     int err;
 
-#ifdef HAVE_ATFUNCS
     if (dirfd == -1)
         dirfd = AT_FDCWD;
     err = unlinkat(dirfd, name, AT_REMOVEDIR);
-#else
-    err = rmdir(name);
-#endif
 
     if (err < 0) {
         switch ( errno ) {
@@ -158,13 +154,9 @@ int copy_file(int dirfd, const char *src, const char *dst, mode_t mode)
     size_t  buflen;
     char   filebuf[8192];
 
-#ifdef HAVE_ATFUNCS
     if (dirfd == -1)
         dirfd = AT_FDCWD;
     sfd = openat(dirfd, src, O_RDONLY);
-#else
-    sfd = open(src, O_RDONLY);
-#endif
     if (sfd < 0) {
         LOG(log_info, logtype_afpd, "copy_file('%s'/'%s'): open '%s' error: %s",
             src, dst, src, strerror(errno));
@@ -226,7 +218,6 @@ exit:
  */
 int netatalk_unlinkat(int dirfd, const char *name)
 {
-#ifdef HAVE_ATFUNCS
     if (dirfd == -1)
         dirfd = AT_FDCWD;
 
@@ -244,9 +235,6 @@ int netatalk_unlinkat(int dirfd, const char *name)
         }
     }
     return AFP_OK;
-#else
-    return netatalk_unlink(name);
-#endif
 
     /* DEADC0DE */
     return 0;
@@ -265,7 +253,6 @@ int netatalk_unlinkat(int dirfd, const char *name)
  */
 int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath)
 {
-#ifdef HAVE_ATFUNCS
     if (sfd == -1)
         sfd = AT_FDCWD;
     if (dfd == -1)
@@ -273,10 +260,6 @@ int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath)
 
     if (renameat(sfd, oldpath, dfd, newpath) < 0)
         return -1;        
-#else
-    if (rename(oldpath, newpath) < 0)
-        return -1;
-#endif  /* HAVE_ATFUNCS */
 
     return 0;
 }
@@ -292,13 +275,9 @@ int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath)
  */
 int statat(int dirfd, const char *path, struct stat *st)
 {
-#ifdef HAVE_ATFUNCS
     if (dirfd == -1)
         dirfd = AT_FDCWD;
     return (fstatat(dirfd, path, st, 0));
-#else
-    return (stat(path, st));
-#endif            
 
     /* DEADC0DE */
     return -1;
