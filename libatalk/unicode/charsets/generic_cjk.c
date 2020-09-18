@@ -19,7 +19,6 @@
 
 #include "config.h"
 
-#if HAVE_USABLE_ICONV
 
 #include "generic_cjk.h"
 #include <string.h>
@@ -210,4 +209,3 @@ ucs2_t cjk_compose_seq(const ucs2_t* in, size_t* len, const u_int32_t* table, si
   *len = n;
   return wc;
 }
-#endif
