@@ -15,9 +15,7 @@
 #ifdef HAVE_SYS_UIO_H
 #include <sys/uio.h>
 #endif /* HAVE_SYS_UIO_H */
-#ifdef HAVE_STRINGS_H
 #include <strings.h>
-#endif
 #include <sys/time.h>
 #include <sys/un.h>
 #include <sys/socket.h>
