@@ -19,7 +19,6 @@
 
 #include <atalk/logger.h>
 #include <atalk/util.h>
-#include <atalk/dsi.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/nbp.h>

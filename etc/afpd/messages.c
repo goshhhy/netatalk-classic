@@ -13,7 +13,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <atalk/afp.h>
-#include <atalk/dsi.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/globals.h>

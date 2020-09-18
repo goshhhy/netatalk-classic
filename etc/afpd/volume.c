@@ -25,7 +25,6 @@
 #include <time.h>
 
 #include <atalk/asp.h>
-#include <atalk/dsi.h>
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
