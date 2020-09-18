@@ -592,11 +592,7 @@ static void show_version_extended(void)
 	show_version();
 
 	printf("         Quota support:\t");
-#ifndef NO_QUOTA_SUPPORT
-	puts("Yes");
-#else
 	puts("No");
-#endif
 
 	printf("   Admin group support:\t");
 #ifdef ADMIN_GRP
