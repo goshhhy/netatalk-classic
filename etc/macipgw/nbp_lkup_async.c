@@ -115,7 +115,7 @@ int nbp_lookup_req(int s, char *name, char *type, char *zone)
 	p = nbp_addtuple(p, addr, name, type, zone);
 
 	bzero(&addr, sizeof(struct sockaddr_at));
-#ifdef BSD4_4
+#ifdef __NetBSD__
 	addr.sat_len = sizeof(struct sockaddr_at);
 #endif
 	addr.sat_family = AF_APPLETALK;

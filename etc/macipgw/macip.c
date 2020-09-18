@@ -457,7 +457,7 @@ void macip_input(void)
 	socklen_t flen;
 
 	bzero(&sat, sizeof(sat));
-#ifdef BSD4_4
+#ifdef __NetBSD__
 	sat.sat_len = sizeof(struct sockaddr_at);
 #endif
 	sat.sat_family = AF_APPLETALK;
@@ -551,7 +551,7 @@ static int get_zones(void)
 		return -1;
 	}
 	bzero((char *) &saddr, sizeof(struct sockaddr_at));
-#ifdef BSD4_4
+#ifdef __NetBSD__
 	saddr.sat_len = sizeof(struct sockaddr_at);
 #endif
 	saddr.sat_family = AF_APPLETALK;

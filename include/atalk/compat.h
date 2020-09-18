@@ -70,11 +70,11 @@ extern char *strdup (const char *);
 extern int inet_aton (const char *, struct in_addr *);
 #endif /* ultrix */
 
-#ifdef BSD4_4
+#ifdef __NetBSD__
 #ifndef SA_INTERRUPT
 #define SA_INTERRUPT	0
 #endif
-#endif /* BSD4_4 */
+#endif /* __NetBSD__ */
 
 #if defined(ultrix) || defined(_IBMR2) || defined(NEED_GETUSERSHELL)
 extern char *getusershell (void);

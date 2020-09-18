@@ -36,10 +36,10 @@
 #endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
 
 
-#if defined(HAVE_SYS_MOUNT_H) || defined(BSD4_4) || \
+#if defined(HAVE_SYS_MOUNT_H) || defined(__NetBSD__) || \
     defined(linux) || defined(ultrix)
 #include <sys/mount.h>
-#endif /* HAVE_SYS_MOUNT_H || BSD4_4 || linux || ultrix */
+#endif /* HAVE_SYS_MOUNT_H || __NetBSD__ || linux || ultrix */
 
 #if defined(linux) || defined(HAVE_MNTENT_H)
 #include <mntent.h>
