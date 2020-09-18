@@ -15,7 +15,7 @@ libatalk_la_LIBADD  = \
 	bstring/libbstring.la \
 	compat/libcompat.la	\
 	nbp/libnbp.la		\
-	netddp/libnetddp.la
+	netddp/libnetddp.la \
 	tdb/libtdb.la       \
 	unicode/libunicode.la \
 	util/libutil.la		\
@@ -29,7 +29,7 @@ libatalk_la_DEPENDENCIES = \
 	bstring/libbstring.la \
 	compat/libcompat.la	\
 	nbp/libnbp.la		\
-	netddp/libnetddp.la
+	netddp/libnetddp.la \
 	tdb/libtdb.la       \
 	unicode/libunicode.la \
 	util/libutil.la		\
