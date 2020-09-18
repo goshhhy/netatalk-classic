@@ -2,7 +2,6 @@
 #define AFPD_STATUS_H 1
 
 #include <sys/cdefs.h>
-#include <atalk/dsi.h>
 #include <atalk/asp.h>
 #include <atalk/globals.h>
 
@@ -43,7 +42,7 @@
 
 extern void status_versions (char * /*status*/,
                              const ASP,
-                             const DSI *);
+                             const void *);
 extern void status_uams (char * /*status*/, const char * /*authlist*/);
 extern void status_init (AFPConfig *, AFPConfig *,
                                  const struct afp_options *);

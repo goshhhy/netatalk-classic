@@ -17,18 +17,8 @@
 #include <sys/socket.h>
 #include <atalk/logger.h>
 
-#if 0
-#ifdef BSD4_4
-#include <sys/param.h>
-#ifndef HAVE_GETHOSTID
-#include <sys/sysctl.h>
-#endif				/* HAVE_GETHOSTID */
-#endif				/* BSD4_4 */
-#endif
-
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
-#include <atalk/dsi.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/nbp.h>
@@ -186,7 +176,7 @@ static u_int16_t status_signature(char *data, int *servoffset,
 
 static size_t status_netaddress(char *data, int *servoffset,
 				const ASP asp,
-				const DSI * dsi,
+				const void * dsi,
 				const struct afp_options *options)
 {
 	char *begin;
@@ -214,83 +204,6 @@ static size_t status_netaddress(char *data, int *servoffset,
 	    (asp ? 1 : 0) +
 	    (((options->flags & OPTION_ANNOUNCESSH) && options->fqdn
 	      && dsi) ? 1 : 0);
-
-	/* ip address */
-	if (dsi) {
-		if (dsi->server.ss_family == AF_INET) {	/* IPv4 */
-			const struct sockaddr_in *inaddr =
-			    (struct sockaddr_in *) &dsi->server;
-			if (inaddr->sin_port == htons(DSI_AFPOVERTCP_PORT)) {
-				*data++ = 6;	/* length */
-				*data++ = 0x01;	/* basic ip address */
-				memcpy(data, &inaddr->sin_addr.s_addr,
-				       sizeof(inaddr->sin_addr.s_addr));
-				data += sizeof(inaddr->sin_addr.s_addr);
-				addresses_len += 7;
-			} else {
-				/* ip address + port */
-				*data++ = 8;
-				*data++ = 0x02;	/* ip address with port */
-				memcpy(data, &inaddr->sin_addr.s_addr,
-				       sizeof(inaddr->sin_addr.s_addr));
-				data += sizeof(inaddr->sin_addr.s_addr);
-				memcpy(data, &inaddr->sin_port,
-				       sizeof(inaddr->sin_port));
-				data += sizeof(inaddr->sin_port);
-				addresses_len += 9;
-			}
-		} else {	/* IPv6 */
-			const struct sockaddr_in6 *sa6 =
-			    (struct sockaddr_in6 *) &dsi->server;
-			if (sa6->sin6_port == htons(DSI_AFPOVERTCP_PORT)) {
-				*data++ = 18;	/* length */
-				*data++ = 6;	/* type */
-				memcpy(data, &sa6->sin6_addr.s6_addr,
-				       sizeof(sa6->sin6_addr.s6_addr));
-				data += sizeof(sa6->sin6_addr.s6_addr);
-				addresses_len += 19;
-			} else {
-				/* ip address + port */
-				*data++ = 20;	/* length */
-				*data++ = 7;	/* type */
-				memcpy(data, &sa6->sin6_addr.s6_addr,
-				       sizeof(sa6->sin6_addr.s6_addr));
-				data += sizeof(sa6->sin6_addr.s6_addr);
-				memcpy(data, &sa6->sin6_port,
-				       sizeof(sa6->sin6_port));
-				data += sizeof(sa6->sin6_port);
-				addresses_len += 21;
-			}
-
-		}
-	}
-
-	/* handle DNS names */
-	if (options->fqdn && dsi) {
-		size_t len = strlen(options->fqdn);
-		if (len + 2 + addresses_len < maxstatuslen - offset) {
-			*data++ = len + 2;
-			*data++ = 0x04;
-			memcpy(data, options->fqdn, len);
-			data += len;
-			addresses_len += len + 2;
-		}
-
-		/* Annouce support for SSH tunneled AFP session, 
-		 * this feature is available since 10.3.2.
-		 * According to the specs (AFP 3.1 p.225) this should
-		 * be an IP+Port style value, but it only works with 
-		 * a FQDN. OSX Server uses FQDN as well.
-		 */
-		if (len + 2 + addresses_len < maxstatuslen - offset) {
-			if (options->flags & OPTION_ANNOUNCESSH) {
-				*data++ = len + 2;
-				*data++ = 0x05;
-				memcpy(data, options->fqdn, len);
-				data += len;
-			}
-		}
-	}
 
 	if (asp) {
 		const struct sockaddr_at *ddpaddr =
@@ -320,7 +233,7 @@ static size_t status_netaddress(char *data, int *servoffset,
 }
 
 static size_t status_directorynames(char *data, int *diroffset,
-				    const DSI * dsi _U_,
+				    const void * dsi _U_,
 				    const struct afp_options *options)
 {
 	char *begin = data;
@@ -374,7 +287,7 @@ static size_t status_directorynames(char *data, int *diroffset,
 }
 
 static size_t status_utf8servername(char *data, int *nameoffset,
-				    const DSI * dsi _U_,
+				    const void * dsi _U_,
 				    const struct afp_options *options)
 {
 	char *Obj, *Type, *Zone;
@@ -456,7 +369,7 @@ void status_init(AFPConfig * aspconfig, AFPConfig * dsiconfig,
 		 const struct afp_options *options)
 {
 	ASP asp;
-	DSI *dsi;
+	void *dsi;
 	char *status = NULL;
 	size_t statuslen;
 	int c, sigoff, ipok;
@@ -472,25 +385,8 @@ void status_init(AFPConfig * aspconfig, AFPConfig * dsiconfig,
 		asp = NULL;
 
 	ipok = 0;
-	if (dsiconfig) {
-		status = dsiconfig->status;
-		maxstatuslen = sizeof(dsiconfig->status);
-		dsi = dsiconfig->obj.handle;
-		if (dsi->server.ss_family == AF_INET) {	/* IPv4 */
-			const struct sockaddr_in *sa4 =
-			    (struct sockaddr_in *) &dsi->server;
-			ipok = sa4->sin_addr.s_addr ? 1 : 0;
-		} else {	/* IPv6 */
-			const struct sockaddr_in6 *sa6 =
-			    (struct sockaddr_in6 *) &dsi->server;
-			for (int i = 0; i < 16; i++) {
-				if (sa6->sin6_addr.s6_addr[i]) {
-					ipok = 1;
-					break;
-				}
-			}
-		}
-	} else
+	
+	/* unilaterally disable DSI */
 		dsi = NULL;
 
 	/*
