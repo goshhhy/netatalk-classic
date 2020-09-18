@@ -24,6 +24,7 @@
 
 #include <netatalk/at.h>
 #include <atalk/compat.h>
+#include <atalk/dsi.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/afp.h>

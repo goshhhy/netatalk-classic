@@ -63,7 +63,7 @@ static struct uam_obj uam_changepw =
 static struct uam_obj *afp_uam = NULL;
 
 
-void status_versions(char *data, const ASP asp, const void * dummy)
+void status_versions(char *data, const ASP asp, const DSI * dsi)
 {
 	char *start = data;
 	u_int16_t status;
@@ -75,6 +75,8 @@ void status_versions(char *data, const ASP asp, const void * dummy)
 	for (i = 0; i < num; i++) {
 		if (!asp && (afp_versions[i].av_number <= 21))
 			continue;
+		if (!dsi && (afp_versions[i].av_number >= 22))
+			continue;
 		count++;
 	}
 	data += ntohs(status);
@@ -82,6 +84,8 @@ void status_versions(char *data, const ASP asp, const void * dummy)
 
 	for (i = 0; i < num; i++) {
 		if (!asp && (afp_versions[i].av_number <= 21))
+			continue;
+		if (!dsi && (afp_versions[i].av_number >= 22))
 			continue;
 		len = strlen(afp_versions[i].av_name);
 		*data++ = len;
@@ -562,6 +566,7 @@ int afp_getsession(AFPObj * obj,
 int afp_disconnect(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 		   char *rbuf _U_, size_t *rbuflen)
 {
+	DSI *dsi = (DSI *) obj->handle;
 	u_int16_t type;
 	u_int32_t tklen;
 	pid_t token;
@@ -606,6 +611,7 @@ int afp_disconnect(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 
 	LOG(log_note, logtype_afpd,
 	    "afp_disconnect: trying primary reconnect");
+	dsi->flags |= DSI_RECONINPROG;
 
 	/* Deactivate tickle timer */
 	const struct itimerval none = { { 0, 0 }, { 0, 0 } };
@@ -615,12 +621,31 @@ int afp_disconnect(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 	if (ipc_child_write(obj->ipc_fd, IPC_DISCOLDSESSION, tklen, &token)
 	    != 0)
 		goto exit;
-
+	/* write uint16_t DSI request ID */
+	if (writet(obj->ipc_fd, &dsi->header.dsi_requestID, 2, 0, 2) != 2) {
+		LOG(log_error, logtype_afpd,
+		    "afp_disconnect: couldn't send DSI request ID");
+		goto exit;
+	}
+	/* now send our connected AFP client socket */
+	if (send_fd(obj->ipc_fd, dsi->socket) != 0)
+		goto exit;
 	/* Now see what happens: either afpd master sends us SIGTERM because our session */
 	/* has been transfered to a old disconnected session, or we continue    */
 	sleep(5);
 
+	if (!(dsi->flags & DSI_RECONINPROG)) {	/* deleted in SIGTERM handler */
+		/* Reconnect succeeded, we exit now after sleeping some more */
+		sleep(2);	/* sleep some more to give the recon. session time */
+		LOG(log_note, logtype_afpd,
+		    "afp_disconnect: primary reconnect succeeded");
+		exit(0);
+	}
+
       exit:
+	/* Reinstall tickle timer */
+	setitimer(ITIMER_REAL, &dsi->timer, NULL);
+
 	LOG(log_error, logtype_afpd,
 	    "afp_disconnect: primary reconnect failed");
 	return AFPERR_MISC;
@@ -870,9 +895,12 @@ int afp_logincont(AFPObj * obj, char *ibuf, size_t ibuflen, char *rbuf,
 int afp_logout(AFPObj * obj, char *ibuf _U_, size_t ibuflen _U_,
 	       char *rbuf _U_, size_t *rbuflen)
 {
+	DSI *dsi = (DSI *) (obj->handle);
+
 	LOG(log_note, logtype_afpd, "AFP logout by %s", obj->username);
 	of_close_all_forks();
 	close_all_vol();
+	dsi->flags = DSI_AFP_LOGGED_OUT;
 	*rbuflen = 0;
 	return AFP_OK;
 }

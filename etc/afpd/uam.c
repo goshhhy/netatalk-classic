@@ -31,6 +31,7 @@
 
 #include <netatalk/endian.h>
 #include <atalk/asp.h>
+#include <atalk/dsi.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/globals.h>
@@ -431,8 +432,21 @@ int uam_afpserver_option(void *private, const int what, void *option,
 
 	case UAM_OPTION_CLIENTNAME:
 		{
-		/* this was DSI-only */
-		break;
+			struct DSI *dsi = obj->handle;
+			const struct sockaddr *sa;
+			static char hbuf[NI_MAXHOST];
+
+			sa = (struct sockaddr *) &dsi->client;
+			if (getnameinfo
+			    (sa, sizeof(dsi->client), hbuf, sizeof(hbuf),
+			     NULL, 0, 0) == 0)
+				*buf = hbuf;
+			else
+				*buf =
+				    getip_string((struct sockaddr *) &dsi->
+						 client);
+
+			break;
 		}
 	case UAM_OPTION_COOKIE:
 		/* it's up to the uam to actually store something useful here.
