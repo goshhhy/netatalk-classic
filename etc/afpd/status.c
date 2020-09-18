@@ -176,7 +176,7 @@ static u_int16_t status_signature(char *data, int *servoffset,
 
 static size_t status_netaddress(char *data, int *servoffset,
 				const ASP asp,
-				const void * dsi,
+				const void *dsi,
 				const struct afp_options *options)
 {
 	char *begin;
@@ -233,7 +233,7 @@ static size_t status_netaddress(char *data, int *servoffset,
 }
 
 static size_t status_directorynames(char *data, int *diroffset,
-				    const void * dsi _U_,
+				    const void *dsi _U_,
 				    const struct afp_options *options)
 {
 	char *begin = data;
@@ -287,7 +287,7 @@ static size_t status_directorynames(char *data, int *diroffset,
 }
 
 static size_t status_utf8servername(char *data, int *nameoffset,
-				    const void * dsi _U_,
+				    const void *dsi _U_,
 				    const struct afp_options *options)
 {
 	char *Obj, *Type, *Zone;
@@ -310,8 +310,8 @@ static size_t status_utf8servername(char *data, int *nameoffset,
 
 	/* extract the obj part of the server */
 	Obj =
-	    (char *) (options->server ? options->server : options->
-		      hostname);
+	    (char *) (options->server ? options->
+		      server : options->hostname);
 	nbp_name(options->server ? options->server : options->hostname,
 		 &Obj, &Type, &Zone);
 	if ((size_t) -1 ==
@@ -385,9 +385,9 @@ void status_init(AFPConfig * aspconfig, AFPConfig * dsiconfig,
 		asp = NULL;
 
 	ipok = 0;
-	
+
 	/* unilaterally disable DSI */
-		dsi = NULL;
+	dsi = NULL;
 
 	/*
 	 * These routines must be called in order -- earlier calls
