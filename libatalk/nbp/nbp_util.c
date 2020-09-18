@@ -22,9 +22,7 @@
 #include <atalk/ddp.h>
 #include <atalk/util.h>
 
-#ifdef HAVE_NETDB_H
 #include <netdb.h>
-#endif /* HAVE_NETDB_H */
 
 #include  "nbp_conf.h"
 
