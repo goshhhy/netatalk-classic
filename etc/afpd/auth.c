@@ -272,56 +272,51 @@ static int login(AFPObj * obj, struct passwd *pwd, void (*logout)(void),
 		return AFPERR_MAXSESS;
 	}
 
-	LOG(log_note, logtype_afpd, "%s Login by %s",
+	LOG(log_note, logtype_afpd, "%s login by %s",
 	    afp_versions[afp_version_index].av_name, pwd->pw_name);
 
-	if (obj->proto == AFPPROTO_ASP) {
-		ASP asp = obj->handle;
-		int addr_net = ntohs(asp->asp_sat.sat_addr.s_net);
-		int addr_node = asp->asp_sat.sat_addr.s_node;
+	ASP asp = obj->handle;
+	int addr_net = ntohs(asp->asp_sat.sat_addr.s_net);
+	int addr_node = asp->asp_sat.sat_addr.s_node;
 
-		if (obj->options.authprintdir) {
-			if (addr_net && addr_node) {	/* Do we have a valid Appletalk address? */
-				char nodename[256];
-				FILE *fp;
-				int mypid = getpid();
-				struct stat stat_buf;
+	if (obj->options.authprintdir) {
+		if (addr_net && addr_node) {	/* Do we have a valid Appletalk address? */
+			char nodename[256];
+			FILE *fp;
+			int mypid = getpid();
+			struct stat stat_buf;
 
-				sprintf(nodename, "%s/net%d.%dnode%d",
-					obj->options.authprintdir,
-					addr_net / 256, addr_net % 256,
-					addr_node);
-				LOG(log_info, logtype_afpd,
-				    "registering %s (uid %d) on %u.%u as %s",
-				    pwd->pw_name, pwd->pw_uid, addr_net,
-				    addr_node, nodename);
+			sprintf(nodename, "%s/net%d.%dnode%d",
+				obj->options.authprintdir,
+				addr_net / 256, addr_net % 256, addr_node);
+			LOG(log_info, logtype_afpd,
+			    "registering %s (uid %d) on %u.%u as %s",
+			    pwd->pw_name, pwd->pw_uid, addr_net,
+			    addr_node, nodename);
 
-				if (stat(nodename, &stat_buf) == 0) {	/* file exists */
-					if (S_ISREG(stat_buf.st_mode)) {	/* normal file */
-						unlink(nodename);
-						fp = fopen(nodename, "w");
-						fprintf(fp, "%s:%d\n",
-							pwd->pw_name,
-							mypid);
-						fclose(fp);
-						chown(nodename,
-						      pwd->pw_uid, -1);
-					} else {	/* somebody is messing with us */
-						LOG(log_error,
-						    logtype_afpd,
-						    "print authfile %s is not a normal file, it will not be modified",
-						    nodename);
-					}
-				} else {	/* file 'nodename' does not exist */
+			if (stat(nodename, &stat_buf) == 0) {	/* file exists */
+				if (S_ISREG(stat_buf.st_mode)) {	/* normal file */
+					unlink(nodename);
 					fp = fopen(nodename, "w");
 					fprintf(fp, "%s:%d\n",
 						pwd->pw_name, mypid);
 					fclose(fp);
 					chown(nodename, pwd->pw_uid, -1);
+				} else {	/* somebody is messing with us */
+					LOG(log_error,
+					    logtype_afpd,
+					    "print authfile %s is not a normal file, it will not be modified",
+					    nodename);
 				}
-			}	/* if (addr_net && addr_node ) */
-		}		/* if (options->authprintdir) */
-	}			/* if (obj->proto == AFPPROTO_ASP) */
+			} else {	/* file 'nodename' does not exist */
+				fp = fopen(nodename, "w");
+				fprintf(fp, "%s:%d\n",
+					pwd->pw_name, mypid);
+				fclose(fp);
+				chown(nodename, pwd->pw_uid, -1);
+			}
+		}		/* if (addr_net && addr_node ) */
+	}			/* if (options->authprintdir) */
 
 	if (set_groups(obj, pwd) != 0)
 		return AFPERR_BADUAM;

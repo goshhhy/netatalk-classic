@@ -221,8 +221,6 @@ int afp_addicon(AFPObj * obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 		return cc;
 	}
 
-	switch (obj->proto) {
-	case AFPPROTO_ASP:
 		buflen = bsize;
 		if ((asp_wrtcont(obj->handle, rbuf, &buflen) < 0)
 		    || buflen != bsize)
@@ -260,8 +258,6 @@ int afp_addicon(AFPObj * obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 			    strerror(errno));
 			return (AFPERR_PARAM);
 		}
-		break;
-	}
 
 	close(si.sdt_fd);
 	si.sdt_fd = -1;

@@ -1267,8 +1267,7 @@ static int write_fork(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 	}
 
 	/* this is yucky, but dsi can stream i/o and asp can't */
-	switch (obj->proto) {
-	case AFPPROTO_ASP:
+	
 		if (asp_wrtcont(obj->handle, rbuf, rbuflen) < 0) {
 			*rbuflen = 0;
 			LOG(log_error, logtype_afpd,
@@ -1289,9 +1288,6 @@ static int write_fork(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 			return cc;
 		}
 		offset += cc;
-		break;
-
-	}
 
 	ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,
 		   ofork->of_refnum);

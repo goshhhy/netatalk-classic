@@ -501,15 +501,10 @@ int uam_afp_read(void *handle, char *buf, size_t *buflen,
 	if (!obj)
 		return AFPERR_PARAM;
 
-	switch (obj->proto) {
-	case AFPPROTO_ASP:
 		if ((len = asp_wrtcont(obj->handle, buf, buflen)) < 0)
 			goto uam_afp_read_err;
 		return action(handle, buf, *buflen);
-		break;
-	default:
-		return -1;
-	}
+	
 	return 0;
 
       uam_afp_read_err:

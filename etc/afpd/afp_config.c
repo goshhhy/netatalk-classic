@@ -57,15 +57,12 @@ void configfree(AFPConfig * configs, const AFPConfig * config)
 			free(p->optcount);
 		}
 
-		switch (p->obj.proto) {
-		case AFPPROTO_ASP:
-			free(p->obj.Obj);
-			free(p->obj.Type);
-			free(p->obj.Zone);
-			atp_close(((ASP) p->obj.handle)->asp_atp);
-			free(p->obj.handle);
-			break;
-		}
+		free(p->obj.Obj);
+		free(p->obj.Type);
+		free(p->obj.Zone);
+		atp_close(((ASP) p->obj.handle)->asp_atp);
+		free(p->obj.handle);
+
 		free(p);
 	}
 
@@ -304,8 +301,8 @@ AFPConfig *configinit(struct afp_options *cmdline)
 		    if ((config->next =
 			 AFPConfigInit(&options, cmdline))) {
 			config =
-			    config->next->next ? config->next->
-			    next : config->next;
+			    config->next->next ? config->
+			    next->next : config->next;
 		}
 	}
 
