@@ -45,11 +45,7 @@ void readmessage(AFPObj * obj)
 	uid_t euid;
 	u_int32_t maxmsgsize;
 
-	maxmsgsize =
-	    (obj->proto ==
-	     AFPPROTO_DSI) ? MIN(MAX(((DSI *) obj->handle)->attn_quantum,
-				     MAXMESGSIZE),
-				 MAXPATHLEN) : MAXMESGSIZE;
+	maxmsgsize = MAXMESGSIZE;
 
 	i = 0;
 	/* Construct file name SERVERTEXT/message.[pid] */
@@ -141,10 +137,7 @@ int afp_getsrvrmesg(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 
 	*rbuflen = 0;
 
-	msgsize =
-	    (obj->proto ==
-	     AFPPROTO_DSI) ? MAX(((DSI *) obj->handle)->attn_quantum,
-				 MAXMESGSIZE) : MAXMESGSIZE;
+	msgsize = MAXMESGSIZE;
 
 	memcpy(&type, ibuf + 2, sizeof(type));
 	memcpy(&bitmap, ibuf + 4, sizeof(bitmap));
