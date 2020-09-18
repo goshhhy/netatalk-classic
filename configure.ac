@@ -567,14 +567,6 @@ if test x"$netatalk_cv_search_sendfile" = x"yes"; then
     fi
 fi
 
-dnl -- check for libgcrypt, if found enables DHX UAM
-AM_PATH_LIBGCRYPT([1:1.2.3],[neta_cv_compile_dhx2=yes
-			neta_cv_have_libgcrypt=yes
-			AC_MSG_NOTICE([Enabling DHX2 UAM])
-			AC_DEFINE(HAVE_LIBGCRYPT, 1, [Define if the DHX2 modules should be built with libgcrypt])
-			AC_DEFINE(UAM_DHX2, 1, [Define if the DHX2 UAM modules should be compiled])
-			])
-
 dnl -- look for openssl, if found enables DHX UAM and Randnum UAM
 AC_PATH_SSL
 
@@ -940,18 +932,13 @@ AC_SUBST(OVERWRITE_CONFIG)
 
 AM_CONDITIONAL(COMPILE_TIMELORD, test x$compile_timelord = xyes)
 AM_CONDITIONAL(COMPILE_A2BOOT, test x$compile_a2boot = xyes)
-AM_CONDITIONAL(HAVE_LIBGCRYPT, test x$neta_cv_have_libgcrypt = xyes)
 AM_CONDITIONAL(HAVE_OPENSSL, test x$neta_cv_have_openssl = xyes)
 AM_CONDITIONAL(HAVE_ACLS, test x"$with_acl_support" = x"yes")
 AM_CONDITIONAL(HAVE_LDAP, test x"$with_ldap" = x"yes")
-AM_CONDITIONAL(USE_DHX, test x$neta_cv_compile_dhx = xyes)
-AM_CONDITIONAL(USE_DHX2, test x$neta_cv_compile_dhx2 = xyes)
 AM_CONDITIONAL(USE_RANDNUM, test x$neta_cv_have_openssl = xyes)
-AM_CONDITIONAL(USE_KERBEROS, test x$compile_kerberos = xyes)
 AM_CONDITIONAL(USE_PAM_SO, test x$use_pam_so = xyes)
 AM_CONDITIONAL(USE_PAM, test x$netatalk_cv_install_pam = xyes)
 AM_CONDITIONAL(BUILD_PAM, test x$compile_pam = xyes)
-AM_CONDITIONAL(USE_PGP, test x$compile_pgp = xyes)
 AM_CONDITIONAL(DEFAULT_HOOK, test x$neta_cv_have_libgcrypt != xyes && test x$neta_cv_have_openssl != xyes)
 AM_CONDITIONAL(USE_NETBSD, test x$sysv_style = xnetbsd)
 AM_CONDITIONAL(USE_REDHAT_SYSV, test x$sysv_style = xredhat-sysv)
