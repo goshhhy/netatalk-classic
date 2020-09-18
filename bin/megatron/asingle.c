@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <atalk/adouble.h>
-#include <netatalk/endian.h>
+
 #include "asingle.h"
 #include "megatron.h"
 

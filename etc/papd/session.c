@@ -20,7 +20,7 @@
 #include <atalk/logger.h>
 #include <sys/time.h>
 #include <sys/uio.h>
-#include <netatalk/endian.h>
+
 #include <netatalk/at.h>
 #include <atalk/atp.h>
 #include <atalk/pap.h>

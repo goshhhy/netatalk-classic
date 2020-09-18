@@ -40,7 +40,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <netatalk/endian.h>
+
 #include <netatalk/at.h>
 #include <atalk/compat.h>
 #include <atalk/atp.h>

@@ -26,7 +26,7 @@
 #define _ATALK_ZIP_H 1
 
 
-#include <netatalk/endian.h>
+
 
 struct ziphdr {
     u_int8_t    zh_op;

@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <netatalk/endian.h>
+
 #include <atalk/cnid.h>
 
 struct _cnid_last_private {

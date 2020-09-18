@@ -8,7 +8,6 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <netatalk/endian.h>
 
 /* useful stuff for child processes. most of this is hidden in 
  * server_child.c to ease changes in implementation */

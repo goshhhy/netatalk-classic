@@ -43,7 +43,7 @@
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */
 
-#include <netatalk/endian.h>
+
 #include <netatalk/at.h>
 #include <atalk/compat.h>
 #include <atalk/aep.h>

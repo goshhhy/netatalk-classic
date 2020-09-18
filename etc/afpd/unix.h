@@ -8,7 +8,7 @@
 #ifdef HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
 #endif /* HAVE_SYS_CDEFS_H */
-#include <netatalk/endian.h>
+
 #include "config.h"
 #include "volume.h"
 

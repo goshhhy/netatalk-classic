@@ -25,7 +25,7 @@
 
 #include <atalk/logger.h>
 
-#include <netatalk/endian.h>
+
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>

@@ -114,7 +114,7 @@ to be safe we must assign new CNIDs to both files.
 #include <string.h>
 #include <sys/param.h>
 #include <errno.h>
-#include <netatalk/endian.h>
+
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
 

@@ -22,7 +22,7 @@
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <netatalk/at.h>
-#include <netatalk/endian.h>
+
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/afp.h>

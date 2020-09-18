@@ -16,7 +16,7 @@
 #include <atalk/afp.h>
 #include <atalk/server_child.h>
 #include <atalk/globals.h>
-#include <netatalk/endian.h>
+
 
 
 /* What a DSI packet looks like:

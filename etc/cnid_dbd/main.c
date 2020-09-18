@@ -25,7 +25,7 @@
 #include <time.h>
 #include <sys/file.h>
 
-#include <netatalk/endian.h>
+
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/logger.h>
 #include <atalk/volinfo.h>

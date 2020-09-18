@@ -25,7 +25,7 @@
 #define _ATALK_RTMP_H 1
 
 
-#include <netatalk/endian.h>
+
 
 #define RTMPROP_REQUEST	1
 

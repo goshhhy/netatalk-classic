@@ -1015,8 +1015,6 @@ AC_OUTPUT([Makefile
 	man/man4/Makefile
 	man/man5/Makefile
 	man/man8/Makefile
-	sys/Makefile
-	sys/netatalk/Makefile
 	test/Makefile
 	test/afpd/Makefile
 	],

@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <netatalk/endian.h>
+
 #include <atalk/unicode.h>
 #include <atalk/logger.h>
 #include <atalk/unicode.h>

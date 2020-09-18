@@ -29,7 +29,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <netatalk/endian.h>
+
 #include <atalk/asp.h>
 #include <atalk/dsi.h>
 #include <atalk/afp.h>

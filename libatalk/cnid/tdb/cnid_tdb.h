@@ -13,7 +13,7 @@
 
 #include <sys/param.h>
 
-#include <netatalk/endian.h>
+
 #include <atalk/cnid.h>
 #include <atalk/cnid_private.h>
 #define STANDALONE 1

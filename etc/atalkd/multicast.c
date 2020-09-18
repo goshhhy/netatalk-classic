@@ -19,7 +19,7 @@
 
 
 #include <atalk/util.h>
-#include <netatalk/endian.h>
+
 #include "rtmp.h"
 #include "zip.h"
 #include "main.h"

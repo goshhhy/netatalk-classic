@@ -3,7 +3,7 @@
 
 #include <sys/types.h>
 #include <netatalk/at.h>
-#include <netatalk/endian.h>
+
 #include <atalk/util.h>
 #include <ctype.h>
 

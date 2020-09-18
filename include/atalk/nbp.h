@@ -31,7 +31,7 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <netatalk/at.h>
-#include <netatalk/endian.h>
+
 
 struct nbphdr {
 #if BYTE_ORDER == BIG_ENDIAN

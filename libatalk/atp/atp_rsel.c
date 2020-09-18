@@ -14,7 +14,7 @@
 #include <signal.h>
 #include <errno.h>
 
-#include <netatalk/endian.h>
+
 #include <netatalk/at.h>
 
 #include <atalk/netddp.h>

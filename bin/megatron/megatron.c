@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <libgen.h>
-#include <netatalk/endian.h>
+
 #include "asingle.h"
 #include "megatron.h"
 #include "hqx.h"

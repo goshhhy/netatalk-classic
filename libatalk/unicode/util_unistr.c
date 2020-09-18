@@ -18,7 +18,7 @@
 #include <atalk/logger.h>
 #include <errno.h>
 
-#include <netatalk/endian.h>
+
 
 #include <atalk/unicode.h>
 #include "precompose.h"
