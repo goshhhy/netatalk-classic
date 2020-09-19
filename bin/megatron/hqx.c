@@ -23,7 +23,7 @@
 #include <netinet/in.h>
 
 #include <atalk/adouble.h>
-
+#include <netatalk/endian.h>
 
 #include "megatron.h"
 #include "nad.h"

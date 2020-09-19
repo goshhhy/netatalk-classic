@@ -26,7 +26,7 @@
 #include "config.h"
 
 #include <sys/types.h>
-
+#include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/nbp.h>
 #include <atalk/util.h>

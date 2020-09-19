@@ -21,7 +21,7 @@
 #include <sys/param.h>
 #include <sys/time.h>
 
-
+#include <netatalk/endian.h>
 #include <atalk/asp.h>
 #include <atalk/dsi.h>
 #include <atalk/afp.h>

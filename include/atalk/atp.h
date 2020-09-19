@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <netatalk/at.h>
+#include <netatalk/endian.h>
 
 /* ATP packet format
 

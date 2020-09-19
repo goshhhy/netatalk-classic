@@ -29,7 +29,7 @@
 #include <sys/types.h>
 #include <sys/cdefs.h>
 #include <netatalk/at.h>
-
+#include <netatalk/endian.h>
 #include <atalk/atp.h>
 
 /*

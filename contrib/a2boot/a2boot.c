@@ -30,7 +30,7 @@
 #include <unistd.h>
 
 #include <netatalk/at.h>
-
+#include <netatalk/endian.h>
 #include <atalk/atp.h>
 #include <atalk/nbp.h>
 

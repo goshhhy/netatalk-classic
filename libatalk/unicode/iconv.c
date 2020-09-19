@@ -36,7 +36,7 @@
 #include <sys/stat.h>
 #include <iconv.h>
 
-
+#include <netatalk/endian.h>
 #include <atalk/unicode.h>
 #include <atalk/logger.h>
 #include "byteorder.h"

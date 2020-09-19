@@ -34,7 +34,7 @@
 #endif /* HAVE_FCNTL_H */
 #include <pwd.h>
 
-
+#include <netatalk/endian.h>
 
 #include <openssl/des.h>
 

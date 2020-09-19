@@ -19,7 +19,7 @@
 #include <time.h>
 
 #include <atalk/adouble.h>
-
+#include <netatalk/endian.h>
 #include "megatron.h"
 #include "macbin.h"
 #include "updcrc.h"

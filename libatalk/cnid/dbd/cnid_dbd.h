@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <string.h>
 
-
+#include <netatalk/endian.h>
 #include <atalk/cnid.h>
 
 extern struct _cnid_module cnid_dbd_module;

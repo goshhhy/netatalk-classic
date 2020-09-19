@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
-
+// #include <netatalk/endian.h>
 
 #include <atalk/unicode.h>
 #include <atalk/cnid.h>

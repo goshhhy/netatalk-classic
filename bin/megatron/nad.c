@@ -21,7 +21,7 @@
 #include <atalk/adouble.h>
 #include <atalk/util.h>
 #include <atalk/volinfo.h>
-
+#include <netatalk/endian.h>
 #include "megatron.h"
 #include "nad.h"
 

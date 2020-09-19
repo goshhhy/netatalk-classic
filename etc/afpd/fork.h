@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <sys/cdefs.h>
 
-
+#include <netatalk/endian.h>
 #include <atalk/adouble.h>
 #include "volume.h"
 #include "directory.h"

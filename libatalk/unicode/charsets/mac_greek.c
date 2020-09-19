@@ -28,7 +28,7 @@
 
 #include "config.h"
 #include <stdlib.h>
-
+#include <netatalk/endian.h>
 #include <atalk/unicode.h>
 
 #include "mac_greek.h"

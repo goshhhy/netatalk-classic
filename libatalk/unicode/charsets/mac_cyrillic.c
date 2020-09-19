@@ -27,7 +27,7 @@
 #include "config.h"
 #include <stdlib.h> /* for size_t */
 
-
+#include <netatalk/endian.h>
 #include <atalk/unicode.h>
 
 #include "mac_cyrillic.h"

@@ -39,7 +39,7 @@
 #include <langinfo.h>
 #endif
 
-
+#include <netatalk/endian.h>
 #include <atalk/logger.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>

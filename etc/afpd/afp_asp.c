@@ -24,7 +24,7 @@
 #include <sys/stat.h>
 #endif				/* HAVE_SYS_STAT_H */
 
-
+#include <netatalk/endian.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/compat.h>

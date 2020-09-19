@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-
+#include <netatalk/endian.h>
 
 #include <string.h>
 #include <inttypes.h>

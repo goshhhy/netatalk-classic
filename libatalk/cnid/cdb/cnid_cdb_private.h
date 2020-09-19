@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-
+#include <netatalk/endian.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

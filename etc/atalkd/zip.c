@@ -18,7 +18,7 @@
 #include <sys/time.h>
 #include <net/if.h>
 #include <net/route.h>
-
+#include <netatalk/endian.h>
 #include <netatalk/at.h>
 
 

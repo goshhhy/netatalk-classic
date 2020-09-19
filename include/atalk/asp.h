@@ -27,6 +27,7 @@
 
 #include <sys/types.h>
 #include <sys/cdefs.h>
+#include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/atp.h>
 #include <atalk/afp.h>

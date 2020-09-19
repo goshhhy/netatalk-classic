@@ -27,7 +27,7 @@
 #endif
 
 #include <netatalk/at.h>
-
+#include <netatalk/endian.h>
 #include <atalk/dsi.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
