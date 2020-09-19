@@ -1043,25 +1043,6 @@ static int accessvol(const char *args, const char *name)
 	return 0;
 }
 
-static int hostaccessvol(int type, const char *volname, const char *args,
-			 const AFPObj * obj)
-{
-	int mask_int;
-	char buf[MAXPATHLEN + 1], *p, *b;
-	struct sockaddr_storage client;
-
-	if (!args)
-		return -1;
-
-	strlcpy(buf, args, sizeof(buf));
-	if ((p = strtok_r(buf, ",", &b)) == NULL)	/* nothing, return okay */
-		return -1;
-
-	/* we don't speak DSI */
-	return -1;
-
-}
-
 static void setextmap(char *ext, char *type, char *creator, int user)
 {
 	struct extmap *em;
