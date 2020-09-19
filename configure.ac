@@ -917,6 +917,8 @@ fi
 
 dnl --------------------- last minute substitutions
 
+CFLAGS="-Wall -Werror $CFLAGS"
+
 AC_SUBST(LIBS)
 AC_SUBST(CFLAGS)
 AC_SUBST(OVERWRITE_CONFIG)
