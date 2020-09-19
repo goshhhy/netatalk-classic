@@ -880,7 +880,7 @@ static int read_fork(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 {
 	struct ofork *ofork;
 	off_t offset, saveoff, reqcount, savereqcount;
-	ssize_t cc, err;
+	ssize_t err;
 	int eid, xlate = 0;
 	u_int16_t ofrefnum;
 	u_char nlmask, nlchar;
