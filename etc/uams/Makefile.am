@@ -66,8 +66,7 @@ install-data-hook:
 	(if [ -d $(DESTDIR)$(uamsdir) ] ; then \
 		cd $(DESTDIR)$(uamsdir)					&& \
 		rm -f $(uams_LINKS)  					&& \
-		$(LN_S) $(UAMS_CLRTXT_LINK) uams_clrtxt.so		&& \
-		;		 					\
+		$(LN_S) $(UAMS_CLRTXT_LINK) uams_clrtxt.so ;		\
 	fi)
 
 
