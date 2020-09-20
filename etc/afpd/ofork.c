@@ -268,7 +268,6 @@ int of_stat(const struct vol *vol, struct path *path)
 }
 
 
-#ifdef HAVE_ATFUNCS
 int of_fstatat(int dirfd, struct path *path)
 {
 	int ret;
@@ -283,7 +282,6 @@ int of_fstatat(int dirfd, struct path *path)
 
 	return ret;
 }
-#endif				/* HAVE_ATFUNCS */
 
 /* -------------------------- 
    stat the current directory.
@@ -366,7 +364,6 @@ struct ofork *of_findname(const struct vol *vol, struct path *path)
  * @param dirfd     (r) directory fd
  * @param path      (rw) pointer to struct path
  */
-#ifdef HAVE_ATFUNCS
 struct ofork *of_findnameat(int dirfd, struct path *path)
 {
 	struct ofork *of;
@@ -390,7 +387,6 @@ struct ofork *of_findnameat(int dirfd, struct path *path)
 
 	return NULL;
 }
-#endif
 
 void of_dealloc(struct ofork *of)
 {
