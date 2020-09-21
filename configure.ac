@@ -176,7 +176,6 @@ AC_MSG_RESULT([$netatalk_cv_with_cracklib])
 
 netatalk_cv_ddp_enabled=yes
 
-AC_SYS_LARGEFILE([], AC_MSG_ERROR([AFP 3.x support requires Large File Support.]))
 AC_CHECK_ICONV
 
 netatalk_cv_force_uidgid=no
@@ -240,8 +239,6 @@ else
 	AC_MSG_RESULT([no])
 fi
 	
-	
-	
 netatalk_cv_use_shellcheck=yes
 AC_MSG_CHECKING([whether checking for a valid shell should be enabled])
 AC_ARG_ENABLE(shell-check,
@@ -256,22 +253,6 @@ AC_ARG_ENABLE(shell-check,
 	],[
 		AC_MSG_RESULT([yes])
 	]
-)
-
-AC_MSG_CHECKING([whether system (fcntl) locking should be disabled])
-AC_ARG_ENABLE(locking,
-        [  --disable-locking       disable system locking],[
-        	if test "$enableval" = "no"; then
-                	AC_DEFINE(DISABLE_LOCKING, 1, [Define if system (fcntl) locking should be disabled])
-	                AC_MSG_RESULT([yes])
-		else
-	                AC_MSG_RESULT([no])
-        	fi
-		
-	],[
-		AC_MSG_RESULT([no])
-	]
-
 )
 
 AC_ARG_ENABLE(gentoo,
@@ -403,13 +384,8 @@ dnl ac_cv_target_os is now host_os, ac_cv_target_cpu is now host_cpu
 
 dnl --------------------- determine operating system from "target"
 case "$host_os" in
-	*kfreebsd*-gnu)			this_os=kfreebsd-gnu ;;
-	*freebsd*) 			this_os=freebsd ;;
 	*linux*)   			this_os=linux ;;
-	*osx*)				this_os=macosx ;;
-	*darwin*)			this_os=macosx ;;
 	*netbsd*) 			this_os=netbsd ;;
-	*openbsd*) 			this_os=openbsd ;;
 esac
 
 case "$host_cpu" in
@@ -423,27 +399,9 @@ dnl --------------------- GNU source
 case "$this_os" in
 	linux)	AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
         ;;
-	kfreebsd-gnu) AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
-        ;;
 esac
 
 dnl --------------------- operating system specific flags (port from sys/*)
-
-dnl ----- FreeBSD specific -----
-if test x"$this_os" = "xfreebsd"; then 
-	AC_MSG_RESULT([ * FreeBSD specific configuration])
-	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
-	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
-    AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
-fi
-
-dnl ----- GNU/kFreeBSD specific -----
-if test x"$this_os" = "xkfreebsd-gnu"; then 
-	AC_MSG_RESULT([ * GNU/kFreeBSD specific configuration])
-	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
-	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
-    AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
-fi
 
 dnl ----- Linux specific -----
 if test x"$this_os" = "xlinux"; then 
@@ -470,39 +428,6 @@ if test "x$ac_have_atalk_addr" = "xyes"; then
 	AC_DEFINE(HAVE_ATALK_ADDR, 1, [set if struct at_addr is called atalk_addr])
 fi
 
-	dnl ----- check if we need the quotactl wrapper
-#	AC_CHECK_HEADERS(sys/quota.h linux/quota.h)
-#	AC_CHECK_FUNC(quotactl,,
-#		AC_DEFINE(NEED_QUOTACTL_WRAPPER, 1, [Define if the quotactl wrapper is needed])
-#		AC_MSG_RESULT([enabling quotactl wrapper])
-#	)
-	AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if Quota support should be disabled])
-
-        # For quotas on Linux XFS filesystems
-        
-        # For linux > 2.5.56
-#        AC_CHECK_HEADERS(linux/dqblk_xfs.h,,
-#		[AC_CHECK_HEADERS(linux/xqm.h linux/xfs_fs.h)
-#        	AC_CHECK_HEADERS(xfs/libxfs.h xfs/xqm.h xfs/xfs_fs.h)]
-#	)
-
-
-#	dnl ----- as far as I can tell, dbtob always does the wrong thing
-#	dnl ----- on every single version of linux I've ever played with.
-#	dnl ----- see etc/afpd/quota.c
-#	AC_DEFINE(HAVE_BROKEN_DBTOB, 1, [Define if dbtob is broken])
-
-fi
-
-dnl ----- Mac OSX specific -----
-if test x"$this_os" = "xmacosx"; then 
-	AC_MSG_RESULT([ * Mac OSX specific configuration])
-	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
-	AC_DEFINE(HAVE_2ARG_DBTOB, 1, [Define if dbtob takes two arguments])
-	dnl AC_DEFINE(NO_DLFCN_H)
-	AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
-	AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if Quota support should be disabled])
-	AC_DEFINE(MACOSX_SERVER, 1, [Define if compiling for MacOS X Server])
 fi
 
 dnl ----- NetBSD specific -----
@@ -513,18 +438,6 @@ if test x"$this_os" = "xnetbsd"; then
 	AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EFTYPE, errno returned by open with O_NOFOLLOW)
 
 	need_dash_r=yes 
-
-	dnl ----- NetBSD does not have crypt.h, uses unistd.h -----
-	AC_DEFINE(UAM_DHX, 1, [Define if the DHX UAM modules should be compiled])
-fi
-
-dnl ----- OpenBSD specific -----
-if test x"$this_os" = "xopenbsd"; then 
-	AC_MSG_RESULT([ * OpenBSD specific configuration])
-	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
-	dnl ----- OpenBSD does not have crypt.h, uses unistd.h -----
-	AC_DEFINE(UAM_DHX, 1, [Define if the DHX UAM modules should be compiled])
-	AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
 fi
 
 dnl ------ Check for sendfile() --------
@@ -540,11 +453,6 @@ if test x"$netatalk_cv_search_sendfile" = x"yes"; then
    case "$host_os" in
    *linux*)
         AC_DEFINE(SENDFILE_FLAVOR_LINUX,1,[Whether linux sendfile() API is available])
-        AC_CHECK_FUNC([sendfile], [netatalk_cv_HAVE_SENDFILE=yes])
-        ;;
-
-    *freebsd*)
-        AC_DEFINE(SENDFILE_FLAVOR_BSD, 1, [Define if the sendfile() function uses BSD semantics])
         AC_CHECK_FUNC([sendfile], [netatalk_cv_HAVE_SENDFILE=yes])
         ;;
 
@@ -577,69 +485,8 @@ fi
 dnl -- check for crypt
 AC_CRYPT
 
-dnl --------------------- check for building PGP UAM module
-
-AC_MSG_CHECKING([whether the PGP UAM should be build])
-AC_ARG_ENABLE(pgp-uam,
-	[  --enable-pgp-uam        enable build of PGP UAM module],[
-	if test "$enableval" = "yes"; then 
-		if test "x$neta_cv_have_openssl" = "xyes"; then 
-			AC_DEFINE(UAM_PGP, 1, [Define if the PGP UAM module should be compiled])
-			compile_pgp=yes
-			AC_MSG_RESULT([yes])
-		else
-			AC_MSG_RESULT([no])
-		fi
-	fi
-	],[
-		AC_MSG_RESULT([no])
-	]
-)
-
-dnl --------------------- check for building Kerberos v4 UAM module
-
-AC_MSG_CHECKING([whether the Kerberos IV UAM should be build])
-AC_ARG_ENABLE(krb4-uam,
-	[  --enable-krb4-uam       enable build of Kerberos v4 UAM module],[
-	if test "$enableval" = "yes"; then
-		AC_DEFINE(UAM_KRB4, 1, [Define if the Kerberos 4 UAM module should be compiled])
-		compile_kerberos=yes
-		AC_MSG_RESULT([yes])
-	else
-		AC_MSG_RESULT([no])
-	fi
-	],[
-		AC_MSG_RESULT([no])
-	]
-)
-
-dnl --------------------- check for building Kerberos V UAM module
-
-netatalk_cv_build_krb5_uam=no
-AC_ARG_ENABLE(krbV-uam,
-	[  --enable-krbV-uam       enable build of Kerberos V UAM module],
-	[
-		if test x"$enableval" = x"yes"; then
-			NETATALK_GSSAPI_CHECK([
-				netatalk_cv_build_krb5_uam=yes
-			],[
-				AC_MSG_ERROR([need GSSAPI to build Kerberos V UAM])
-			])
-		fi
-	]
-	
-)
-
-AC_MSG_CHECKING([whether Kerberos V UAM should be build])
-if test x"$netatalk_cv_build_krb5_uam" = x"yes"; then
-	AC_MSG_RESULT([yes])
-else
-	AC_MSG_RESULT([no])
-fi
-AM_CONDITIONAL(USE_GSSAPI, test x"$netatalk_cv_build_krb5_uam" = x"yes")
 
 dnl --------------------- overwrite the config files . . . or not.
-
 AC_MSG_CHECKING([whether configuration files should be overwritten])
 AC_ARG_ENABLE(overwrite,
 	[  --enable-overwrite      overwrite configuration files during installation],
@@ -709,14 +556,6 @@ fi
 if test x"$with_acl_support" = x"yes" ; then
 	AC_MSG_NOTICE(checking whether ACL support is available:)
 	case "$host_os" in
-	*sysv5*)
-		AC_MSG_NOTICE(Using UnixWare ACLs)
-		AC_DEFINE(HAVE_UNIXWARE_ACLS,1,[Whether UnixWare ACLs are available])
-		;;
-	*darwin*)
-		AC_MSG_NOTICE(ACLs on Darwin currently not supported)
-		AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support is available])
-		;;
 	*)
 		AC_CHECK_LIB(acl,acl_get_file,[ACL_LIBS="$ACL_LIBS -lacl"])
 		case "$host_os" in
@@ -798,34 +637,6 @@ neta_cv_eas_sys_not_found=no
 AC_CHECK_HEADERS(sys/attributes.h attr/xattr.h sys/xattr.h sys/extattr.h sys/uio.h sys/ea.h)
 
 case "$this_os" in
-
-  *osf*)
-	AC_SEARCH_LIBS(getproplist, [proplist])
-	AC_CHECK_FUNCS([getproplist fgetproplist setproplist fsetproplist],
-                   [neta_cv_eas_sys_found=yes],
-                   [neta_cv_eas_sys_not_found=yes])
-	AC_CHECK_FUNCS([delproplist fdelproplist add_proplist_entry get_proplist_entry],,
-                   [neta_cv_eas_sys_not_found=yes])
-	AC_CHECK_FUNCS([sizeof_proplist_entry],,
-                   [neta_cv_eas_sys_not_found=yes])
-  ;;
-
-  'freebsd')
-    AC_CHECK_FUNCS([extattr_delete_fd extattr_delete_file extattr_delete_link],
-                   [neta_cv_eas_sys_found=yes],
-                   [neta_cv_eas_sys_not_found=yes])
-    AC_CHECK_FUNCS([extattr_get_fd extattr_get_file extattr_get_link],,
-                   [neta_cv_eas_sys_not_found=yes])
-    AC_CHECK_FUNCS([extattr_list_fd extattr_list_file extattr_list_link],,
-                   [neta_cv_eas_sys_not_found=yes])
-    AC_CHECK_FUNCS([extattr_set_fd extattr_set_file extattr_set_link],,
-                   [neta_cv_eas_sys_not_found=yes])
-  ;;
-
-  *freebsd4* | *dragonfly* )
-    AC_DEFINE(BROKEN_EXTATTR, 1, [Does extattr API work])
-  ;;
-
   *)
 	AC_SEARCH_LIBS(getxattr, [attr])
 
@@ -856,64 +667,12 @@ case "$this_os" in
   ;;
 esac
 
-# Do xattr functions take additional options like on Darwin?
-if test x"$ac_cv_func_getxattr" = x"yes" ; then
-	AC_CACHE_CHECK([whether xattr interface takes additional options], smb_attr_cv_xattr_add_opt, [
-		old_LIBS=$LIBS
-		LIBS="$LIBS $ACL_LIBS"
-		AC_TRY_COMPILE([
-			#include <sys/types.h>
-			#if HAVE_ATTR_XATTR_H
-			#include <attr/xattr.h>
-			#elif HAVE_SYS_XATTR_H
-			#include <sys/xattr.h>
-			#endif
-		],[
-			getxattr(0, 0, 0, 0, 0, 0);
-		],
-	        [smb_attr_cv_xattr_add_opt=yes],
-		[smb_attr_cv_xattr_add_opt=no;LIBS=$old_LIBS])
-	])
-	if test x"$smb_attr_cv_xattr_add_opt" = x"yes"; then
-		AC_DEFINE(XATTR_ADD_OPT, 1, [xattr functions have additional options])
-	fi
-fi
-
 if test "x$neta_cv_eas_sys_found" = "xyes" ; then
    if test "x$neta_cv_eas_sys_not_found" != "xyes" ; then
       neta_cv_eas="$neta_cv_eas | sys"
    fi
 fi
 AC_DEFINE_UNQUOTED(EA_MODULES,["$neta_cv_eas"],[Available Extended Attributes modules])
-
-dnl --------------------- Check if realpath() takes NULL
-AC_CACHE_CHECK([if the realpath function allows a NULL argument],
-    neta_cv_REALPATH_TAKES_NULL, [
-        AC_TRY_RUN([
-            #include <stdio.h>
-            #include <limits.h>
-            #include <signal.h>
-
-            void exit_on_core(int ignored) {
-                 exit(1);
-            }
-
-            main() {
-                char *newpath;
-                signal(SIGSEGV, exit_on_core);
-                newpath = realpath("/tmp", NULL);
-                exit((newpath != NULL) ? 0 : 1);
-            }],
-            neta_cv_REALPATH_TAKES_NULL=yes,
-            neta_cv_REALPATH_TAKES_NULL=no,
-            neta_cv_REALPATH_TAKES_NULL=cross
-        )
-    ]
-)
-
-if test x"$neta_cv_REALPATH_TAKES_NULL" = x"yes"; then
-    AC_DEFINE(REALPATH_TAKES_NULL,1,[Whether the realpath function allows NULL])
-fi
 
 dnl --------------------- last minute substitutions
 
@@ -942,8 +701,6 @@ AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
 AM_CONDITIONAL(USE_SYSTEMD, test x$sysv_style = xsystemd || test x$sysv_style = xredhat-systemd || test x$sysv_style = xsuse-systemd)
 AM_CONDITIONAL(USE_UNDEF, test x$sysv_style = x)
 AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
-AM_CONDITIONAL(USE_APPLETALK, test x$netatalk_cv_ddp_enabled = xyes)
-AM_CONDITIONAL(HAVE_ATFUNCS, test x"$ac_neta_haveatfuncs" = x"yes")
 
 dnl --------------------- generate files
 
