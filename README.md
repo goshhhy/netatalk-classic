@@ -1,4 +1,4 @@
-#Current release: netatalk-classic-20200921
+# Current release: netatalk-classic-20200921
 
 netatalk-classic is an implementation of the AppleTalk Protocol Suite for Linux
 and NetBSD.
@@ -8,7 +8,7 @@ AppleTalk (2.2.6).
 
 netatalk-classic is maintained by Christopher Kobayashi <software+github@disavowed.jp>
 
-#News for 20200921:
+# News for 20200921:
 
 * Support for obsolete platforms and non-AppleTalk functions were removed to keep the codebase manageable (and reduce the potential attack surface).  If you need to serve AppleTalk on TRU64, Solaris, Irix, and so forth, please use Netatalk 2.2.6.  If you need TCP/IP support, please use Netatalk 3.x.
 
