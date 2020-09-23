@@ -676,6 +676,8 @@ AC_DEFINE_UNQUOTED(EA_MODULES,["$neta_cv_eas"],[Available Extended Attributes mo
 
 dnl --------------------- last minute substitutions
 
+dnl Comment/change this to deal with gcc "helpful" warnings
+
 CFLAGS="-Wall -Werror $CFLAGS"
 
 AC_SUBST(LIBS)
