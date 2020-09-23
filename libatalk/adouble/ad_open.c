@@ -871,10 +871,11 @@ char *ad_path_osx(const char *path, int adflags _U_)
 {
 	static char pathbuf[MAXPATHLEN + 1];
 	char c, *slash, buf[MAXPATHLEN + 1];
+	char *unused _U_;
 
 	if (!strcmp(path, ".")) {
 		/* fixme */
-		getcwd(buf, MAXPATHLEN);
+		unused = getcwd(buf, MAXPATHLEN);
 	} else {
 		strlcpy(buf, path, MAXPATHLEN + 1);
 	}
