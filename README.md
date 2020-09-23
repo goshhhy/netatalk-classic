@@ -1,4 +1,4 @@
-# Current release: netatalk-classic-20200921
+# Current release: netatalk-classic-20200923
 
 netatalk-classic is an implementation of the AppleTalk Protocol Suite for Linux
 and NetBSD.
@@ -7,6 +7,12 @@ netatalk-classic was forked from the last release of Netatalk that supported
 AppleTalk (2.2.6).
 
 netatalk-classic is maintained by Christopher Kobayashi <software+github@disavowed.jp>
+
+# News for 20200923:
+
+* Ubuntu ships an older version of gcc that is much more paranoid than the version shipped with NetBSD and ArchLinux, so it flagged many cases of system call return values being ignored.  That might not be a problem for chown() and chdir(), but we definitely want to know when seteuid() and siblings are having problems.  Warnings are now logged when system calls fail.
+
+* The logging routine now adds a local timestamp and respects the loglevel setting.
 
 # News for 20200921:
 
