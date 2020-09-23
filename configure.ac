@@ -759,11 +759,9 @@ AC_OUTPUT([Makefile
 	libatalk/cnid/Makefile
 	libatalk/cnid/last/Makefile
 	libatalk/cnid/dbd/Makefile
-	libatalk/compat/Makefile
 	libatalk/nbp/Makefile
 	libatalk/netddp/Makefile
 	libatalk/util/Makefile
-	libatalk/tdb/Makefile
 	libatalk/unicode/Makefile
 	libatalk/unicode/charsets/Makefile
 	libatalk/vfs/Makefile
