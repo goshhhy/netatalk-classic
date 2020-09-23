@@ -68,32 +68,34 @@
 
 #if BYTE_ORDER==LITTLE_ENDIAN
 #define UCS2ICONV "UCS-2LE"
-#else /* !LITTLE_ENDIAN */
+#else				/* !LITTLE_ENDIAN */
 #define UCS2ICONV "UCS-2BE"
-#endif /* BYTE_ORDER */
+#endif				/* BYTE_ORDER */
 
-static size_t ascii_pull(void *,char **, size_t *, char **, size_t *);
-static size_t ascii_push(void *,char **, size_t *, char **, size_t *);
-static size_t iconv_copy(void *,char **, size_t *, char **, size_t *);
+static size_t ascii_pull(void *, char **, size_t *, char **, size_t *);
+static size_t ascii_push(void *, char **, size_t *, char **, size_t *);
+static size_t iconv_copy(void *, char **, size_t *, char **, size_t *);
 
-extern  struct charset_functions charset_mac_roman;
-extern  struct charset_functions charset_mac_hebrew;
-extern  struct charset_functions charset_mac_centraleurope;
-extern  struct charset_functions charset_mac_cyrillic;
-extern  struct charset_functions charset_mac_greek;
-extern  struct charset_functions charset_mac_turkish;
-extern  struct charset_functions charset_utf8;
-extern  struct charset_functions charset_utf8_mac;
-extern  struct charset_functions charset_mac_japanese;
-extern  struct charset_functions charset_mac_chinese_trad;
-extern  struct charset_functions charset_mac_korean;
-extern  struct charset_functions charset_mac_chinese_simp;
+extern struct charset_functions charset_mac_roman;
+extern struct charset_functions charset_mac_hebrew;
+extern struct charset_functions charset_mac_centraleurope;
+extern struct charset_functions charset_mac_cyrillic;
+extern struct charset_functions charset_mac_greek;
+extern struct charset_functions charset_mac_turkish;
+extern struct charset_functions charset_utf8;
+extern struct charset_functions charset_utf8_mac;
+extern struct charset_functions charset_mac_japanese;
+extern struct charset_functions charset_mac_chinese_trad;
+extern struct charset_functions charset_mac_korean;
+extern struct charset_functions charset_mac_chinese_simp;
 
 
 static struct charset_functions builtin_functions[] = {
-	{"UCS-2",   0, iconv_copy, iconv_copy, CHARSET_WIDECHAR | CHARSET_PRECOMPOSED, NULL, NULL, NULL},
-	{"ASCII",     0, ascii_pull, ascii_push, CHARSET_MULTIBYTE | CHARSET_PRECOMPOSED, NULL, NULL, NULL},
-	{NULL, 0, NULL, NULL, 0, NULL, NULL, NULL}
+	{ "UCS-2", 0, iconv_copy, iconv_copy,
+	 CHARSET_WIDECHAR | CHARSET_PRECOMPOSED, NULL, NULL, NULL },
+	{ "ASCII", 0, ascii_pull, ascii_push,
+	 CHARSET_MULTIBYTE | CHARSET_PRECOMPOSED, NULL, NULL, NULL },
+	{ NULL, 0, NULL, NULL, 0, NULL, NULL, NULL }
 };
 
 
@@ -112,11 +114,11 @@ static struct charset_functions builtin_functions[] = {
 
 static struct charset_functions *charsets = NULL;
 
-struct charset_functions *find_charset_functions(const char *name) 
+struct charset_functions *find_charset_functions(const char *name)
 {
 	struct charset_functions *c = charsets;
 
-	while(c) {
+	while (c) {
 		if (strcasecmp(name, c->name) == 0) {
 			return c;
 		}
@@ -126,7 +128,7 @@ struct charset_functions *find_charset_functions(const char *name)
 	return NULL;
 }
 
-int atalk_register_charset(struct charset_functions *funcs) 
+int atalk_register_charset(struct charset_functions *funcs)
 {
 	if (!funcs) {
 		return -1;
@@ -134,7 +136,8 @@ int atalk_register_charset(struct charset_functions *funcs)
 
 	/* Check whether we already have this charset... */
 	if (find_charset_functions(funcs->name)) {
-		LOG (log_debug, logtype_default, "Duplicate charset %s, not registering", funcs->name);
+		LOG(log_debug, logtype_default,
+		    "Duplicate charset %s, not registering", funcs->name);
 		return -2;
 	}
 
@@ -150,7 +153,7 @@ static void lazy_initialize_iconv(void)
 
 	if (!initialized) {
 		initialized = 1;
-		for(i = 0; builtin_functions[i].name; i++) 
+		for (i = 0; builtin_functions[i].name; i++)
 			atalk_register_charset(&builtin_functions[i]);
 
 		/* register additional charsets */
@@ -172,14 +175,15 @@ static void lazy_initialize_iconv(void)
 /* if there was an error then reset the internal state,
    this ensures that we don't have a shift state remaining for
    character sets like SJIS */
-static size_t sys_iconv(void *cd, 
+static size_t sys_iconv(void *cd,
 			char **inbuf, size_t *inbytesleft,
 			char **outbuf, size_t *outbytesleft)
 {
-	size_t ret = iconv((iconv_t)cd, 
-			   (ICONV_CONST char**)inbuf, inbytesleft, 
+	size_t ret = iconv((iconv_t) cd,
+			   (ICONV_CONST char **) inbuf, inbytesleft,
 			   outbuf, outbytesleft);
-	if (ret == (size_t)-1) iconv(cd, NULL, NULL, NULL, NULL);
+	if (ret == (size_t) -1)
+		iconv(cd, NULL, NULL, NULL, NULL);
 	return ret;
 }
 
@@ -189,9 +193,9 @@ static size_t sys_iconv(void *cd,
  * It only knows about a very small number of character sets - just
  * enough that netatalk works on systems that don't have iconv.
  **/
-size_t atalk_iconv(atalk_iconv_t cd, 
-		 const char **inbuf, size_t *inbytesleft,
-		 char **outbuf, size_t *outbytesleft)
+size_t atalk_iconv(atalk_iconv_t cd,
+		   const char **inbuf, size_t *inbytesleft,
+		   char **outbuf, size_t *outbytesleft)
 {
 	char cvtbuf[2048];
 	char *bufp = cvtbuf;
@@ -199,8 +203,9 @@ size_t atalk_iconv(atalk_iconv_t cd,
 
 	/* in many cases we can go direct */
 	if (cd->direct) {
-		return cd->direct(cd->cd_direct, 
-				  (char **)inbuf, inbytesleft, outbuf, outbytesleft);
+		return cd->direct(cd->cd_direct,
+				  (char **) inbuf, inbytesleft, outbuf,
+				  outbytesleft);
 	}
 
 
@@ -208,17 +213,20 @@ size_t atalk_iconv(atalk_iconv_t cd,
 	while (*inbytesleft > 0) {
 		bufp = cvtbuf;
 		bufsize = sizeof(cvtbuf);
-		
-		if (cd->pull(cd->cd_pull, (char **)inbuf, inbytesleft, &bufp, &bufsize) == (size_t)-1
-		       && errno != E2BIG) {
-		    return -1;
+
+		if (cd->
+		    pull(cd->cd_pull, (char **) inbuf, inbytesleft, &bufp,
+			 &bufsize) == (size_t) -1 && errno != E2BIG) {
+			return -1;
 		}
 
 		bufp = cvtbuf;
 		bufsize = sizeof(cvtbuf) - bufsize;
 
-		if (cd->push(cd->cd_push, &bufp, &bufsize, outbuf, outbytesleft) == (size_t)-1) {
-		    return -1;
+		if (cd->
+		    push(cd->cd_push, &bufp, &bufsize, outbuf,
+			 outbytesleft) == (size_t) -1) {
+			return -1;
 		}
 	}
 
@@ -239,10 +247,10 @@ atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode)
 	from = charsets;
 	to = charsets;
 
-	ret = (atalk_iconv_t)malloc(sizeof(*ret));
+	ret = (atalk_iconv_t) malloc(sizeof(*ret));
 	if (!ret) {
 		errno = ENOMEM;
-		return (atalk_iconv_t)-1;
+		return (atalk_iconv_t) - 1;
 	}
 	memset(ret, 0, sizeof(*ret));
 
@@ -257,46 +265,58 @@ atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode)
 
 	/* check if we have a builtin function for this conversion */
 	from = find_charset_functions(fromcode);
-	if (from) ret->pull = from->pull;
-	
+	if (from)
+		ret->pull = from->pull;
+
 	to = find_charset_functions(tocode);
-	if (to) ret->push = to->push;
+	if (to)
+		ret->push = to->push;
 
 	/* check if we can use iconv for this conversion */
 	if (!from || (from->flags & CHARSET_ICONV)) {
-	  ret->cd_pull = iconv_open(UCS2ICONV, from && from->iname ? from->iname : fromcode);
-	  if (ret->cd_pull != (iconv_t)-1) {
-	    if (!ret->pull) ret->pull = sys_iconv;
-	  } else ret->pull = NULL;
+		ret->cd_pull = iconv_open(UCS2ICONV, from
+					  && from->iname ? from->
+					  iname : fromcode);
+		if (ret->cd_pull != (iconv_t) - 1) {
+			if (!ret->pull)
+				ret->pull = sys_iconv;
+		} else
+			ret->pull = NULL;
 	}
 	if (ret->pull) {
-	  if (!to || (to->flags & CHARSET_ICONV)) {
-	    ret->cd_push = iconv_open(to && to->iname ? to->iname : tocode, UCS2ICONV);
-	    if (ret->cd_push != (iconv_t)-1) {
-	      if (!ret->push) ret->push = sys_iconv;
-	    } else ret->push = NULL;
-	  }
-	  if (!ret->push && ret->cd_pull) iconv_close((iconv_t)ret->cd_pull);
+		if (!to || (to->flags & CHARSET_ICONV)) {
+			ret->cd_push = iconv_open(to
+						  && to->iname ? to->
+						  iname : tocode,
+						  UCS2ICONV);
+			if (ret->cd_push != (iconv_t) - 1) {
+				if (!ret->push)
+					ret->push = sys_iconv;
+			} else
+				ret->push = NULL;
+		}
+		if (!ret->push && ret->cd_pull)
+			iconv_close((iconv_t) ret->cd_pull);
 	}
-	
+
 	if (!ret->push || !ret->pull) {
 		SAFE_FREE(ret->from_name);
 		SAFE_FREE(ret->to_name);
 		SAFE_FREE(ret);
 		errno = EINVAL;
-		return (atalk_iconv_t)-1;
+		return (atalk_iconv_t) - 1;
 	}
 
 	/* check for conversion to/from ucs2 */
 	if (strcasecmp(fromcode, "UCS-2") == 0) {
-	  ret->direct = ret->push;
-	  ret->cd_direct = ret->cd_push;
-	  ret->cd_push = NULL;
+		ret->direct = ret->push;
+		ret->cd_direct = ret->cd_push;
+		ret->cd_push = NULL;
 	}
 	if (strcasecmp(tocode, "UCS-2") == 0) {
-	  ret->direct = ret->pull;
-	  ret->cd_direct = ret->cd_pull;
-	  ret->cd_pull = NULL;
+		ret->direct = ret->pull;
+		ret->cd_direct = ret->cd_pull;
+		ret->cd_pull = NULL;
 	}
 
 	return ret;
@@ -305,11 +325,14 @@ atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode)
 /*
   simple iconv_close() wrapper
 */
-int atalk_iconv_close (atalk_iconv_t cd)
+int atalk_iconv_close(atalk_iconv_t cd)
 {
-	if (cd->cd_direct) iconv_close((iconv_t)cd->cd_direct);
-	if (cd->cd_pull) iconv_close((iconv_t)cd->cd_pull);
-	if (cd->cd_push) iconv_close((iconv_t)cd->cd_push);
+	if (cd->cd_direct)
+		iconv_close((iconv_t) cd->cd_direct);
+	if (cd->cd_pull)
+		iconv_close((iconv_t) cd->cd_pull);
+	if (cd->cd_push)
+		iconv_close((iconv_t) cd->cd_push);
 
 	SAFE_FREE(cd->from_name);
 	SAFE_FREE(cd->to_name);
@@ -330,17 +353,16 @@ static size_t ascii_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
 	ucs2_t curchar;
 
 	while (*inbytesleft >= 1 && *outbytesleft >= 2) {
-		if ((unsigned char)(*inbuf)[0] < 0x80) {
+		if ((unsigned char) (*inbuf)[0] < 0x80) {
 			curchar = (ucs2_t) (*inbuf)[0];
-			SSVAL((*outbuf),0,curchar);
-		}
-		else {
+			SSVAL((*outbuf), 0, curchar);
+		} else {
 			errno = EILSEQ;
 			return -1;
 		}
-		(*inbytesleft)  -= 1;
+		(*inbytesleft) -= 1;
 		(*outbytesleft) -= 2;
-		(*inbuf)  += 1;
+		(*inbuf) += 1;
 		(*outbuf) += 2;
 	}
 
@@ -348,28 +370,27 @@ static size_t ascii_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
 		errno = E2BIG;
 		return -1;
 	}
-	
+
 	return 0;
 }
 
 static size_t ascii_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
 			 char **outbuf, size_t *outbytesleft)
 {
-	int ir_count=0;
+	int ir_count = 0;
 	ucs2_t curchar;
 
 	while (*inbytesleft >= 2 && *outbytesleft >= 1) {
 		curchar = SVAL((*inbuf), 0);
 		if (curchar < 0x0080) {
 			(*outbuf)[0] = curchar;
-		}
-		else {
+		} else {
 			errno = EILSEQ;
 			return -1;
-		}	
-		(*inbytesleft)  -= 2;
+		}
+		(*inbytesleft) -= 2;
 		(*outbytesleft) -= 1;
-		(*inbuf)  += 2;
+		(*inbuf) += 2;
 		(*outbuf) += 1;
 	}
 
@@ -382,7 +403,7 @@ static size_t ascii_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
 		errno = E2BIG;
 		return -1;
 	}
-	
+
 	return ir_count;
 }
 
