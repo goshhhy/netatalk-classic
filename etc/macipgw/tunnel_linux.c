@@ -168,7 +168,8 @@ void tunnel_input(void)
 
 void tunnel_output(char *buffer, int len)
 {
-	write(gTunnel.dev, buffer, len);
+	if (write(gTunnel.dev, buffer, len) < 0)
+		fprintf(stderr, "tunnel_output() write failed\n");
 	if (gDebug & DEBUG_TUNNEL)
 		printf("sent packet into tunnel.\n");
 }
