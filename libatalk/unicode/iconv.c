@@ -66,15 +66,11 @@
  **/
 #define CHARSET_WIDECHAR    32
 
-#ifdef HAVE_UCS2INTERNAL
-#define UCS2ICONV "UCS-2-INTERNAL"
-#else /* !HAVE_UCS2INTERNAL */
 #if BYTE_ORDER==LITTLE_ENDIAN
 #define UCS2ICONV "UCS-2LE"
 #else /* !LITTLE_ENDIAN */
 #define UCS2ICONV "UCS-2BE"
 #endif /* BYTE_ORDER */
-#endif /* HAVE_UCS2INTERNAL */
 
 static size_t ascii_pull(void *,char **, size_t *, char **, size_t *);
 static size_t ascii_push(void *,char **, size_t *, char **, size_t *);
