@@ -162,10 +162,10 @@ void afp_options_init(struct afp_options *options)
 	options->sigconffile = _PATH_AFPDSIGCONF;
 	options->uuidconf = _PATH_AFPDUUIDCONF;
 	options->uampath = _PATH_AFPDUAMPATH;
-	options->uamlist = "uams_dhx.so,uams_dhx2.so";
+	options->uamlist = "uams_randnum.so,uams_clrtxt.so,uams_guest.so";
 	options->guest = "nobody";
 	options->loginmesg = "";
-	options->transports = AFPTRANS_TCP;	/*  TCP only */
+	options->transports = AFPTRANS_DDP;	/*  DDP only */
 	options->passwdfile = _PATH_AFPDPWFILE;
 	options->tickleval = 30;
 	options->timeout = 4;	/* 4 tickles = 2 minutes */
@@ -251,6 +251,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 	if (strstr(buf, " -setpassword"))
 		options->passwdbits |= PASSWD_SET;
 
+#if defined(__OBSOLETE__)
 	/* transports */
 	if (strstr(buf, " -transall"))
 		options->transports = AFPTRANS_ALL;
@@ -264,6 +265,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 		options->transports |= AFPTRANS_DDP;
 	if (strstr(buf, " -noddp"))
 		options->transports &= ~AFPTRANS_DDP;
+#endif
 	if (strstr(buf, "-client_polling"))
 		options->server_notif = 0;
 
@@ -329,11 +331,13 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 		}
 	}
 
+#if defined(__OBSOLETE__)
 	if ((c = getoption(buf, "-dsireadbuf"))) {
 		options->dsireadbuf = atoi(c);
 		if (options->dsireadbuf < 6)
 			options->dsireadbuf = 6;
 	}
+#endif
 
 	if ((c = getoption(buf, "-server_quantum")))
 		options->server_quantum = strtoul(c, NULL, 0);
@@ -364,8 +368,10 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 		}
 	}
 
+#if defined(__OBSOLETE__)
 	if ((c = getoption(buf, "-unsetuplog")))
 		unsetuplog(c);
+#endif
 
 #ifdef ADMIN_GRP
 	if ((c = getoption(buf, "-admingroup"))) {
@@ -376,6 +382,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 	}
 #endif				/* ADMIN_GRP */
 
+#if defined(__OBSOLETE__)
 	if ((c = getoption(buf, "-k5service")) && (opt = strdup(c)))
 		options->k5service = opt;
 	if ((c = getoption(buf, "-k5realm")) && (opt = strdup(c)))
@@ -392,6 +399,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 		putenv(options->k5keytab);
 		/* setenv( "KRB5_KTNAME", c, 1 ); */
 	}
+#endif
 	if ((c = getoption(buf, "-authprintdir")) && (opt = strdup(c)))
 		options->authprintdir = opt;
 	if ((c = getoption(buf, "-uampath")) && (opt = strdup(c)))
