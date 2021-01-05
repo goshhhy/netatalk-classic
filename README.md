@@ -8,6 +8,22 @@ AppleTalk (2.2.6).
 
 netatalk-classic is maintained by Christopher Kobayashi <software+github@disavowed.jp>
 
+## Why?
+
+The Netatalk-3.x branch doesn't support classic Macintosh networking.  Netatalk-2.2.6 had TCP/IP support roughly welded in, creating an unreasonable amount of code complexity and the associated code maintenance nightmare thereby.
+
+netatalk-classic is an attempt at creating a codebase that effectively and securely fulfils a single purpose: file/printer sharing with classic Macintoshes (Macinti?  I'm unsure about the plural here)
+
+## How?
+
+* Execute ./bootstrap in the top directory.  You'll need automake, autoconf, and libtool (at least) on top of a working toolchain.
+
+* ./configure [options].  NetBSD users will probably want "--prefix=/usr/pkg".
+
+* make; make install.
+
+* For now, use whichever init files your distribution uses for netatalk-2.2.x.  In the near future, working systemd unit files will be installed if the build framework detects /usr/lib/systemd/system
+
 ## News for 20200923:
 
 * Ubuntu ships an older version of gcc that is much more paranoid than the version shipped with NetBSD and ArchLinux, so it flagged many cases of system call return values being ignored.  That might not be a problem for chown() and chdir(), but we definitely want to know when seteuid() and siblings are having problems.  Warnings are now logged when system calls fail.
