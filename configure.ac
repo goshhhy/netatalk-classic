@@ -254,15 +254,6 @@ AC_ARG_ENABLE(shell-check,
 	]
 )
 
-AC_ARG_ENABLE(gentoo,
-	[  --enable-gentoo         use gentoo-style sysv configuration ],[
-	if test "$enableval" = "yes"; then
-		sysv_style=gentoo
-	fi
-	AC_MSG_RESULT([enabling gentoo-style sysv support])
-	]
-)
-
 AC_ARG_ENABLE(netbsd,
 	[  --enable-netbsd         use NetBSD-style rc.d configuration ],
 	if test "x$enableval" = "xyes"; then
@@ -271,19 +262,11 @@ AC_ARG_ENABLE(netbsd,
 	AC_MSG_RESULT([enabling NetBSD-style rc.d support])
 )
 
-AC_ARG_ENABLE(debian,
-	[  --enable-debian         use debian-style sysv configuration ],[
-	if test "$enableval" = "yes"; then
-		sysv_style=debian
-	fi
-	AC_MSG_RESULT([enabling debian-style sysv support])
-	]
-)
-
 AC_ARG_ENABLE(systemd,
 	[  --enable-systemd        use general systemd configuration],[
 	if test "$enableval" = "yes"; then
 		sysv_style=systemd
+		systemdsystemunitdir=$(pkg-config --variable=systemdsystemunitdir systemd)
 	fi
 	AC_MSG_RESULT([enabling general systemd support])
 	]
@@ -737,7 +720,6 @@ AC_OUTPUT([Makefile
 	distrib/config/netatalk-config
 	distrib/initscripts/Makefile
 	distrib/m4/Makefile
-	distrib/systemd/Makefile
 	doc/Makefile
 	etc/Makefile
 	etc/afpd/Makefile
