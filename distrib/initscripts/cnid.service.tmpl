@@ -1,0 +1,14 @@
+[Unit]
+Description=netatalk-classic CNID database daemon for afpd fileserver
+After=network.target
+Before=afpd.service
+
+[Service]
+Type=forking
+GuessMainPID=no
+ExecStart=:SBINDIR:/cnid_metad
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=netatalk-classic AppleTalk protocol server for Macintosh clients
+After=network.target
+
+[Service]
+Type=simple
+GuessMainPID=no
+ExecStart=:SBINDIR:/atalkd
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
