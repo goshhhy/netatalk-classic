@@ -19,7 +19,7 @@
 #include "rtmp.h"
 #include "route.h"
 
-#ifndef __NetBSD__
+#if defined(__linux__)
 int route( int message, struct sockaddr *dst, struct sockaddr *gate, int flags)
 {
     struct rtentry	rtent;

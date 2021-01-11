@@ -25,13 +25,8 @@
 #include <errno.h>
 #include <ctype.h>
 
-/* STDC check */
 #include <string.h>
-
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
-
 
 #include <atalk/unicode.h>
 #include "interface.h"

@@ -880,14 +880,14 @@ int looproute(struct interface *iface, unsigned int cmd)
     loop.sat_addr.s_net = htons( ATADDR_ANYNET );
     loop.sat_addr.s_node = ATADDR_ANYNODE;
 
-#ifndef __NetBSD__
+#if defined(__linux__)
     if ( route( cmd,
 		(struct sockaddr *) &dst,
 		(struct sockaddr *) &loop,
 		RTF_UP | RTF_HOST ) ) {
 	return( 1 );
     }
-#else /* ! __NetBSD__ */
+#else /* __NetBSD__ */
     if ( route( cmd,
 	    	(struct sockaddr_at *) &dst,
 		(struct sockaddr_at *) &loop,
@@ -943,7 +943,7 @@ int gateroute(unsigned int command, struct rtmptab *rtmp)
 
     do {
 	dst.sat_addr.s_net = htons( net );
-#ifndef __NetBSD__
+#if defined(__linux__)
 	if ( route( command,
 		    (struct sockaddr *) &dst,
 		    (struct sockaddr *) &gate,
@@ -953,7 +953,7 @@ int gateroute(unsigned int command, struct rtmptab *rtmp)
 		    strerror(errno) );
 	    continue;
 	}
-#else /* ! __NetBSD__ */
+#else /* __NetBSD__ */
 	if ( route( command,
 		    (struct sockaddr_at *) &dst,
 		    (struct sockaddr_at *) &gate,
