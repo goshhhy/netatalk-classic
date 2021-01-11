@@ -1,3 +1,11 @@
+## Note for netatalk-classic
+
+Rob Braun's "abridge" was imported into the netatalk-classic repository to act as a reference *only*.  As Rob warns, abridge is extremely dangerous.
+
+The intention is to add AppleTalk-over-IP tunneling functionality to the router code in atalkd.
+
+This subdirectory will go away once that goal has been reached.
+
 # Introduction
 
 abridge is an EtherTalk bridge, or rather a really dumb repeater.
