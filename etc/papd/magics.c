@@ -46,6 +46,10 @@ int ps(struct papfile *infile, struct papfile *outfile,
 			}
 			state = 1;
 		}
+
+		if ( infile->pf_state & PF_QUERY ) {
+			infile->pf_state |= PF_BOT;
+		}
 		if ((comment = compeek())) {
 			switch ((*comment->c_handler) (infile, outfile,
 						       sat)) {
@@ -87,6 +91,10 @@ int ps(struct papfile *infile, struct papfile *outfile,
 					compush(comment);
 					continue;	/* top of for (;;) */
 				}
+			else {
+			    CONSUME(infile, linelength + crlflength);
+			    continue; /* clear out the input queue if client sent data before magic string */
+			}
 #if 0
 				infile->pf_state &= ~PF_BOT;
 
