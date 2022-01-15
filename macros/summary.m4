@@ -11,8 +11,6 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	else
 		AC_MSG_RESULT([         none])
 	fi
-	AC_MSG_RESULT([    AFP:])
-	AC_MSG_RESULT([         Large file support (>2GB) for AFP3: $wx_largefile])
 	AC_MSG_RESULT([         Extended Attributes: $neta_cv_eas])
 	AC_MSG_RESULT([    CNID:])
 	AC_MSG_RESULT([         backends: $compiled_backends])
