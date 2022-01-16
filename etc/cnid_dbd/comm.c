@@ -251,13 +251,10 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout,
 }
 
 /* ------------ */
-#define USE_WRITEV
 int comm_snd(struct cnid_dbd_rply *rply)
 {
-#ifdef USE_WRITEV
 	struct iovec iov[2];
 	size_t towrite;
-#endif
 
 	if (!rply->namelen) {
 		if (write(cur_fd, rply, sizeof(struct cnid_dbd_rply)) !=
@@ -270,7 +267,6 @@ int comm_snd(struct cnid_dbd_rply *rply)
 		}
 		return 1;
 	}
-#ifdef USE_WRITEV
 
 	iov[0].iov_base = rply;
 	iov[0].iov_len = sizeof(struct cnid_dbd_rply);
@@ -284,20 +280,5 @@ int comm_snd(struct cnid_dbd_rply *rply)
 		invalidate_fd(cur_fd);
 		return 0;
 	}
-#else
-	if (write(cur_fd, rply, sizeof(struct cnid_dbd_rply)) !=
-	    sizeof(struct cnid_dbd_rply)) {
-		LOG(log_error, logtype_cnid,
-		    "error writing message header: %s", strerror(errno));
-		invalidate_fd(cur_fd);
-		return 0;
-	}
-	if (write(cur_fd, rply->name, rply->namelen) != rply->namelen) {
-		LOG(log_error, logtype_cnid,
-		    "error writing message name: %s", strerror(errno));
-		invalidate_fd(cur_fd);
-		return 0;
-	}
-#endif
 	return 1;
 }
