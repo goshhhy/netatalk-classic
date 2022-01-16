@@ -146,14 +146,6 @@ static int afp_errpwdexpired(AFPObj * obj _U_, char *ibuf _U_,
 	return AFPERR_PWDEXPR;
 }
 
-static int afp_null_nolog(AFPObj * obj _U_, char *ibuf _U_,
-			  size_t ibuflen _U_, char *rbuf _U_,
-			  size_t *rbuflen)
-{
-	*rbuflen = 0;
-	return (AFPERR_NOOP);
-}
-
 static int set_auth_switch(int expired)
 {
 	int i;
@@ -175,65 +167,6 @@ static int set_auth_switch(int expired)
 				     afp_logout, NULL);
 		uam_afpserver_action(AFP_CHANGEPW, UAM_AFPSERVER_PREAUTH,
 				     afp_changepw, NULL);
-	} else {
-		afp_switch = postauth_switch;
-		switch (afp_version) {
-
-		case 33:
-		case 32:
-			uam_afpserver_action(AFP_GETEXTATTR,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_getextattr, NULL);
-			uam_afpserver_action(AFP_SETEXTATTR,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_setextattr, NULL);
-			uam_afpserver_action(AFP_REMOVEATTR,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_remextattr, NULL);
-			uam_afpserver_action(AFP_LISTEXTATTR,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_listextattr, NULL);
-
-		case 31:
-			uam_afpserver_action(AFP_SYNCDIR,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_syncdir, NULL);
-			uam_afpserver_action(AFP_SYNCFORK,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_syncfork, NULL);
-			uam_afpserver_action(AFP_SPOTLIGHT_PRIVATE,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_null_nolog, NULL);
-			uam_afpserver_action(AFP_ENUMERATE_EXT2,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_enumerate_ext2, NULL);
-
-		case 30:
-			uam_afpserver_action(AFP_ENUMERATE_EXT,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_enumerate_ext, NULL);
-			uam_afpserver_action(AFP_BYTELOCK_EXT,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_bytelock_ext, NULL);
-			/* catsearch_ext uses the same packet as catsearch FIXME double check this, it wasn't true for enue
-			   enumerate_ext */
-			uam_afpserver_action(AFP_CATSEARCH_EXT,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_catsearch_ext, NULL);
-			uam_afpserver_action(AFP_GETSESSTOKEN,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_getsession, NULL);
-			uam_afpserver_action(AFP_READ_EXT,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_read_ext, NULL);
-			uam_afpserver_action(AFP_WRITE_EXT,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_write_ext, NULL);
-			uam_afpserver_action(AFP_DISCTOLDSESS,
-					     UAM_AFPSERVER_POSTAUTH,
-					     afp_disconnect, NULL);
-
-		}
 	}
 
 	return AFP_OK;

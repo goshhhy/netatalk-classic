@@ -91,40 +91,26 @@ static int getforkparams(struct ofork *ofork, u_int16_t bitmap, char *buf,
 }
 
 /* ---------------------------- */
-static off_t get_off_t(char **ibuf, int is64)
+static off_t get_off_t(char **ibuf)
 {
 	u_int32_t temp;
-	off_t ret;
+	off_t ret = 0;
 
-	ret = 0;
 	memcpy(&temp, *ibuf, sizeof(temp));
 	ret = ntohl(temp);	/* ntohl is unsigned */
 	*ibuf += sizeof(temp);
 
-	if (is64) {
-		memcpy(&temp, *ibuf, sizeof(temp));
-		*ibuf += sizeof(temp);
-		ret = ntohl(temp) | ((unsigned long long) ret << 32);
-	} else {
-		ret = (int) ret;	/* sign extend */
-	}
+	ret = (int) ret;	/* sign extend */
+
 	return ret;
 }
 
 /* ---------------------- */
-static int set_off_t(off_t offset, char *rbuf, int is64)
+static int set_off_t(off_t offset, char *rbuf)
 {
 	u_int32_t temp;
-	int ret;
+	int ret = 0;
 
-	ret = 0;
-	if (is64) {
-		temp = htonl((uint64_t) offset >> 32);
-		memcpy(rbuf, &temp, sizeof(temp));
-		rbuf += sizeof(temp);
-		ret = sizeof(temp);
-		offset &= 0xffffffff;
-	}
 	temp = htonl(offset);
 	memcpy(rbuf, &temp, sizeof(temp));
 	ret += sizeof(temp);
@@ -134,17 +120,17 @@ static int set_off_t(off_t offset, char *rbuf, int is64)
 
 /* ------------------------ 
 */
-static int is_neg(int is64, off_t val)
+static int is_neg(off_t val)
 {
 	if (val < 0
-	    || (sizeof(off_t) == 8 && !is64 && (val & 0x80000000U)))
+	    || (sizeof(off_t) == 8 && !(0) && (val & 0x80000000U)))
 		return 1;
 	return 0;
 }
 
-static int sum_neg(int is64, off_t offset, off_t reqcount)
+static int sum_neg(off_t offset, off_t reqcount)
 {
-	if (is_neg(is64, offset + reqcount))
+	if (is_neg(offset + reqcount))
 		return 1;
 	return 0;
 }
@@ -552,7 +538,6 @@ int afp_setforkparams(AFPObj * obj _U_, char *ibuf, size_t ibuflen,
 	off_t size;
 	u_int16_t ofrefnum, bitmap;
 	int err;
-	int is64;
 	int eid;
 	off_t st_size;
 
@@ -593,18 +578,15 @@ int afp_setforkparams(AFPObj * obj _U_, char *ibuf, size_t ibuflen,
 		return AFPERR_BITMAP;
 	}
 
-	is64 = 0;
 	if ((bitmap & ((1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)))) {
-		if (afp_version >= 30) {
-			is64 = 4;
-		} else
-			return AFPERR_BITMAP;
+		/* we don't speak AFP3, so no 64-bit support */
+		return AFPERR_BITMAP;
 	}
 
-	if (ibuflen < 2 + sizeof(ofrefnum) + sizeof(bitmap) + is64 + 4)
+	if (ibuflen < 2 + sizeof(ofrefnum) + sizeof(bitmap) + 4)
 		return AFPERR_PARAM;
 
-	size = get_off_t(&ibuf, is64);
+	size = get_off_t(&ibuf);
 
 	if (size < 0)
 		return AFPERR_PARAM;	/* Some MacOS don't return an error they just don't change the size! */
@@ -689,7 +671,7 @@ int afp_setforkparams(AFPObj * obj _U_, char *ibuf, size_t ibuflen,
 
 /* ---------------------- */
 static int byte_lock(AFPObj * obj _U_, char *ibuf, size_t ibuflen _U_,
-		     char *rbuf, size_t *rbuflen, int is64)
+		     char *rbuf, size_t *rbuflen)
 {
 	struct ofork *ofork;
 	off_t offset, length;
@@ -721,13 +703,13 @@ static int byte_lock(AFPObj * obj _U_, char *ibuf, size_t ibuflen _U_,
 	} else
 		return AFPERR_PARAM;
 
-	offset = get_off_t(&ibuf, is64);
-	length = get_off_t(&ibuf, is64);
+	offset = get_off_t(&ibuf);
+	length = get_off_t(&ibuf);
 
 	/* FIXME AD_FILELOCK test is surely wrong */
 	if (length == -1)
 		length = BYTELOCK_MAX;
-	else if (!length || is_neg(is64, length)) {
+	else if (!length || is_neg(length)) {
 		return AFPERR_PARAM;
 	} else if ((length >= AD_FILELOCK_BASE) && -1 == (ad_reso_fileno(ofork->of_ad))) {	/* HF ? */
 		return AFPERR_LOCK;
@@ -767,7 +749,7 @@ static int byte_lock(AFPObj * obj _U_, char *ibuf, size_t ibuflen _U_,
 			break;
 		}
 	}
-	*rbuflen = set_off_t(offset, rbuf, is64);
+	*rbuflen = set_off_t(offset, rbuf);
 	return (AFP_OK);
 }
 
@@ -775,14 +757,7 @@ static int byte_lock(AFPObj * obj _U_, char *ibuf, size_t ibuflen _U_,
 int afp_bytelock(AFPObj * obj, char *ibuf, size_t ibuflen, char *rbuf,
 		 size_t *rbuflen)
 {
-	return byte_lock(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
-}
-
-/* --------------------------- */
-int afp_bytelock_ext(AFPObj * obj, char *ibuf, size_t ibuflen, char *rbuf,
-		     size_t *rbuflen)
-{
-	return byte_lock(obj, ibuf, ibuflen, rbuf, rbuflen, 1);
+	return byte_lock(obj, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 #undef UNLOCKBIT
@@ -876,7 +851,7 @@ static ssize_t read_file(struct ofork *ofork, int eid,
  * 10752 is a bug in Mac 7.5.x finder 
 */
 static int read_fork(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
-		     char *rbuf, size_t *rbuflen, int is64)
+		     char *rbuf, size_t *rbuflen)
 {
 	struct ofork *ofork;
 	off_t offset, saveoff, reqcount, savereqcount;
@@ -901,15 +876,12 @@ static int read_fork(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 		err = AFPERR_ACCESS;
 		goto afp_read_err;
 	}
-	offset = get_off_t(&ibuf, is64);
-	reqcount = get_off_t(&ibuf, is64);
+	offset = get_off_t(&ibuf);
+	reqcount = get_off_t(&ibuf);
 
-	if (is64) {
-		nlmask = nlchar = 0;
-	} else {
-		nlmask = *ibuf++;
-		nlchar = *ibuf++;
-	}
+	nlmask = *ibuf++;
+	nlchar = *ibuf++;
+
 	/* if we wanted to be picky, we could add in the following
 	 * bit: if (afp_version == 11 && !(nlmask == 0xFF || !nlmask))
 	 */
@@ -978,14 +950,7 @@ static int read_fork(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 int afp_read(AFPObj * obj, char *ibuf, size_t ibuflen, char *rbuf,
 	     size_t *rbuflen)
 {
-	return read_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
-}
-
-/* ---------------------- */
-int afp_read_ext(AFPObj * obj, char *ibuf, size_t ibuflen, char *rbuf,
-		 size_t *rbuflen)
-{
-	return read_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 1);
+	return read_fork(obj, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 /* ---------------------- */
@@ -1187,7 +1152,7 @@ static ssize_t write_file(struct ofork *ofork, int eid,
  * the client may have sent us a bunch of data that's not reflected 
  * in reqcount et al. */
 static int write_fork(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
-		      char *rbuf, size_t *rbuflen, int is64)
+		      char *rbuf, size_t *rbuflen)
 {
 	struct ofork *ofork;
 	off_t offset, saveoff, reqcount, oldsize, newsize;
@@ -1202,8 +1167,8 @@ static int write_fork(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 	memcpy(&ofrefnum, ibuf, sizeof(ofrefnum));
 	ibuf += sizeof(ofrefnum);
 
-	offset = get_off_t(&ibuf, is64);
-	reqcount = get_off_t(&ibuf, is64);
+	offset = get_off_t(&ibuf);
+	reqcount = get_off_t(&ibuf);
 
 	if (NULL == (ofork = of_find(ofrefnum))) {
 		LOG(log_error, logtype_afpd,
@@ -1247,7 +1212,7 @@ static int write_fork(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 
 	/* offset can overflow on 64-bit capable filesystems.
 	 * report disk full if that's going to happen. */
-	if (sum_neg(is64, offset, reqcount)) {
+	if (sum_neg(offset, reqcount)) {
 		LOG(log_error, logtype_afpd, "write_fork: DISK FULL");
 		err = AFPERR_DFULL;
 		goto afp_write_err;
@@ -1255,7 +1220,7 @@ static int write_fork(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 
 	if (!reqcount) {	/* handle request counts of 0 */
 		err = AFP_OK;
-		*rbuflen = set_off_t(offset, rbuf, is64);
+		*rbuflen = set_off_t(offset, rbuf);
 		goto afp_write_err;
 	}
 
@@ -1301,7 +1266,7 @@ static int write_fork(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 	ofork->of_vol->v_appended +=
 	    (newsize > oldsize) ? (newsize - oldsize) : 0;
 
-	*rbuflen = set_off_t(offset, rbuf, is64);
+	*rbuflen = set_off_t(offset, rbuf);
 	return (AFP_OK);
 
       afp_write_err:
@@ -1315,16 +1280,7 @@ static int write_fork(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 int afp_write(AFPObj * obj, char *ibuf, size_t ibuflen, char *rbuf,
 	      size_t *rbuflen)
 {
-	return write_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
-}
-
-/* ---------------------------- 
- * FIXME need to deal with SIGXFSZ signal
-*/
-int afp_write_ext(AFPObj * obj, char *ibuf, size_t ibuflen, char *rbuf,
-		  size_t *rbuflen)
-{
-	return write_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 1);
+	return write_fork(obj, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 /* ---------------------------- */
