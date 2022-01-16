@@ -525,58 +525,43 @@ int getmetadata(struct vol *vol,
 			   to "pXYZ" when we created it.  See IA, Ver 2.
 			   <shirsch@adelphia.net> */
 		case FILPBIT_PDINFO:
-			if (afp_version >= 30) {	/* UTF8 name */
-				utf8 = kTextEncodingUTF8;
-				utf_nameoff = data;
-				data += sizeof(u_int16_t);
-				aint = 0;
-				memcpy(data, &aint, sizeof(aint));
-				data += sizeof(aint);
-			} else {
-				if (adp) {
-					memcpy(fdType,
-					       ad_entry(adp,
-							ADEID_FINDERI), 4);
+			if (adp) {
+				memcpy(fdType, ad_entry(adp, ADEID_FINDERI), 4);
 
-					if (memcmp(fdType, "TEXT", 4) == 0) {
-						achar = '\x04';
-						ashort = 0x0000;
-					} else
-					    if (memcmp(fdType, "PSYS", 4)
-						== 0) {
-						achar = '\xff';
-						ashort = 0x0000;
-					} else
-					    if (memcmp(fdType, "PS16", 4)
-						== 0) {
-						achar = '\xb3';
-						ashort = 0x0000;
-					} else
-					    if (memcmp(fdType, "BINA", 4)
-						== 0) {
-						achar = '\x00';
-						ashort = 0x0000;
-					} else if (fdType[0] == 'p') {
-						achar = fdType[1];
-						ashort =
-						    (fdType[2] * 256) +
-						    fdType[3];
-					} else {
-						achar = '\x00';
-						ashort = 0x0000;
-					}
+				if (memcmp(fdType, "TEXT", 4) == 0) {
+					achar = '\x04';
+					ashort = 0x0000;
+				} else
+				    if (memcmp(fdType, "PSYS", 4) == 0) {
+					achar = '\xff';
+					ashort = 0x0000;
+				} else
+				    if (memcmp(fdType, "PS16", 4) == 0) {
+					achar = '\xb3';
+					ashort = 0x0000;
+				} else
+				    if (memcmp(fdType, "BINA", 4) == 0) {
+					achar = '\x00';
+					ashort = 0x0000;
+				} else if (fdType[0] == 'p') {
+					achar = fdType[1];
+					ashort = (fdType[2] * 256) + fdType[3];
 				} else {
 					achar = '\x00';
 					ashort = 0x0000;
 				}
-
-				*data++ = achar;
-				*data++ = 0;
-				memcpy(data, &ashort, sizeof(ashort));
-				data += sizeof(ashort);
-				memset(data, 0, sizeof(ashort));
-				data += sizeof(ashort);
+			} else {
+				achar = '\x00';
+				ashort = 0x0000;
 			}
+
+			*data++ = achar;
+			*data++ = 0;
+			memcpy(data, &ashort, sizeof(ashort));
+			data += sizeof(ashort);
+			memset(data, 0, sizeof(ashort));
+			data += sizeof(ashort);
+
 			break;
 		case FILPBIT_EXTDFLEN:
 			aint = htonl((uint64_t)st->st_size >> 32);
@@ -1025,22 +1010,20 @@ int setfilparams(struct vol *vol,
 			}
 			break;
 		case FILPBIT_PDINFO:
-			if (afp_version < 30) {	/* else it's UTF8 name */
-				achar = *buf;
+			achar = *buf;
+			buf += 2;
+			/* Keep special case to support crlf translations */
+			if ((unsigned int) achar == 0x04) {
+				fdType = (u_char *) "TEXT";
 				buf += 2;
-				/* Keep special case to support crlf translations */
-				if ((unsigned int) achar == 0x04) {
-					fdType = (u_char *) "TEXT";
-					buf += 2;
-				} else {
-					xyy[0] = (u_char) 'p';
-					xyy[1] = achar;
-					xyy[3] = *buf++;
-					xyy[2] = *buf++;
-					fdType = xyy;
-				}
-				break;
+			} else {
+				xyy[0] = (u_char) 'p';
+				xyy[1] = achar;
+				xyy[3] = *buf++;
+				xyy[2] = *buf++;
+				fdType = xyy;
 			}
+			break;
 			/* fallthrough */
 		default:
 			err = AFPERR_BITMAP;
@@ -1133,14 +1116,9 @@ int setfilparams(struct vol *vol,
 			}
 			break;
 		case FILPBIT_PDINFO:
-			if (afp_version < 30) {	/* else it's UTF8 name */
-				memcpy(ad_entry(adp, ADEID_FINDERI),
-				       fdType, 4);
-				memcpy(ad_entry(adp, ADEID_FINDERI) + 4,
-				       "pdos", 4);
-				break;
-			}
-			/* fallthrough */
+			memcpy(ad_entry(adp, ADEID_FINDERI), fdType, 4);
+			memcpy(ad_entry(adp, ADEID_FINDERI) + 4, "pdos", 4);
+			break;
 		default:
 			err = AFPERR_BITMAP;
 			goto setfilparam_done;
@@ -1297,18 +1275,9 @@ int copy_path_name(const struct vol *vol, char *newname, char *ibuf)
 	switch (type) {
 	case 2:
 		if ((plen = (unsigned char) *ibuf++) != 0) {
-			if (afp_version >= 30) {
-				/* convert it to UTF8 
-				 */
-				if ((plen =
-				     mtoUTF8(vol, ibuf, plen, newname,
-					     AFPOBJ_TMPSIZ)) ==
-				    (size_t) -1)
-					return -1;
-			} else {
-				strncpy(newname, ibuf, plen);
-				newname[plen] = '\0';
-			}
+			strncpy(newname, ibuf, plen);
+			newname[plen] = '\0';
+
 			if (strlen(newname) != plen) {
 				/* there's \0 in newname, e.g. it's a pathname not
 				 * only a filename. 

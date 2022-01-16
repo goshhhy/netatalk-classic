@@ -596,9 +596,6 @@ static int get_version(AFPObj * obj, char *ibuf, size_t ibuflen,
 	if (i == num)		/* An inappropo version */
 		return AFPERR_BADVERS;
 
-	if (afp_version >= 30)
-		return AFPERR_BADVERS;
-
 	return 0;
 }
 
@@ -864,26 +861,15 @@ int afp_changepw(AFPObj * obj, char *ibuf, size_t ibuflen, char *rbuf,
 	if ((len + 1) & 1)	/* pad byte */
 		ibuf++;
 
-	if (afp_version < 30) {
-		len = (unsigned char) *ibuf++;
-		if (len > sizeof(username) - 1) {
-			return AFPERR_PARAM;
-		}
-		memcpy(username, ibuf, len);
-		username[len] = '\0';
-		ibuf += len;
-		if ((len + 1) & 1)	/* pad byte */
-			ibuf++;
-	} else {
-		/* AFP > 3.0 doesn't pass the username, APF 3.1 specs page 124 */
-		if (ibuf[0] != '\0' || ibuf[1] != '\0')
-			return AFPERR_PARAM;
-		ibuf += 2;
-		len = MIN(sizeof(username), strlen(obj->username));
-		memcpy(username, obj->username, len);
-		username[len] = '\0';
+	len = (unsigned char) *ibuf++;
+	if (len > sizeof(username) - 1) {
+		return AFPERR_PARAM;
 	}
-
+	memcpy(username, ibuf, len);
+	username[len] = '\0';
+	ibuf += len;
+	if ((len + 1) & 1)	/* pad byte */
+		ibuf++;
 
 	LOG(log_info, logtype_afpd, "changing password for <%s>",
 	    username);

@@ -311,65 +311,6 @@ static int set_dir_errors(struct path *path, const char *where, int err)
 static int cname_mtouname(const struct vol *vol, struct dir *dir,
 			  struct path *ret, int toUTF8)
 {
-	static char temp[MAXPATHLEN + 1];
-	char *t;
-	cnid_t fileid = 0;
-
-	if (afp_version >= 30) {
-		if (toUTF8) {
-			if (dir->d_did == DIRDID_ROOT_PARENT) {
-				/*
-				 * With uft8 volume name is utf8-mac, but requested path may be a mangled longname. See #2611981.
-				 * So we compare it with the longname from the current volume and if they match
-				 * we overwrite the requested path with the utf8 volume name so that the following
-				 * strcmp can match.
-				 */
-				ucs2_to_charset(vol->v_maccharset,
-						vol->v_macname, temp,
-						AFPVOL_MACNAMELEN + 1);
-				if (strcasecmp(ret->m_name, temp) == 0)
-					ucs2_to_charset(CH_UTF8_MAC,
-							vol->v_u8mname,
-							ret->m_name,
-							AFPVOL_U8MNAMELEN);
-			} else {
-				/* toUTF8 */
-				if (mtoUTF8
-				    (vol, ret->m_name, strlen(ret->m_name),
-				     temp, MAXPATHLEN) == (size_t) -1) {
-					afp_errno = AFPERR_PARAM;
-					return -1;
-				}
-				strcpy(ret->m_name, temp);
-			}
-		}
-
-		/* check for OS X mangled filename :( */
-		t = demangle_osx(vol, ret->m_name, dir->d_did, &fileid);
-
-		if (curdir == NULL) {
-			/* demangle_osx() calls dirlookup() which might have clobbered curdir */
-			movecwd(vol, dir);
-		}
-
-		LOG(log_maxdebug, logtype_afpd,
-		    "cname_mtouname('%s',did:%u) {demangled:'%s', fileid:%u}",
-		    ret->m_name, ntohl(dir->d_did), t, ntohl(fileid));
-
-		if (t != ret->m_name) {
-			ret->u_name = t;
-			/* duplicate work but we can't reuse all convert_char we did in demangle_osx
-			 * flags weren't the same
-			 */
-			if ((t =
-			     utompath(vol, ret->u_name, fileid,
-				      utf8_encoding()))) {
-				/* at last got our view of mac name */
-				strcpy(ret->m_name, t);
-			}
-		}
-	}			/* afp_version >= 30 */
-
 	/* If we haven't got it by now, get it */
 	if (ret->u_name == NULL) {
 		if ((ret->u_name =
@@ -1127,8 +1068,6 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 	struct dir *cdir;
 	char *data, *p;
 	int len;
-	u_int32_t hint;
-	u_int16_t len16;
 	int size = 0;
 	int toUTF8 = 0;
 
@@ -1144,25 +1083,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 		data++;
 		len = (unsigned char) *data++;
 		size = 2;
-		if (afp_version >= 30) {
-			ret.m_type = 3;
-			toUTF8 = 1;
-		}
 		break;
-	case 3:
-		if (afp_version >= 30) {
-			data++;
-			memcpy(&hint, data, sizeof(hint));
-			hint = ntohl(hint);
-			data += sizeof(hint);
-
-			memcpy(&len16, data, sizeof(len16));
-			len = ntohs(len16);
-			data += 2;
-			size = 7;
-			break;
-		}
-		/* else it's an error */
 	default:
 		afp_errno = AFPERR_PARAM;
 		return (NULL);
@@ -1687,25 +1608,13 @@ int getdirparams(const struct vol *vol,
 			   Just pass back the same basic block for all
 			   directories. <shirsch@ibm.net> */
 		case DIRPBIT_PDINFO:
-			if (afp_version >= 30) {	/* UTF8 name */
-				utf8 = kTextEncodingUTF8;
-				if (dir->d_m_name)	/* root of parent can have a null name */
-					utf_nameoff = data;
-				else
-					memset(data, 0, sizeof(u_int16_t));
-				data += sizeof(u_int16_t);
-				aint = 0;
-				memcpy(data, &aint, sizeof(aint));
-				data += sizeof(aint);
-			} else {	/* ProDOS Info Block */
-				*data++ = 0x0f;
-				*data++ = 0;
-				ashort = htons(0x0200);
-				memcpy(data, &ashort, sizeof(ashort));
-				data += sizeof(ashort);
-				memset(data, 0, sizeof(ashort));
-				data += sizeof(ashort);
-			}
+			*data++ = 0x0f;
+			*data++ = 0;
+			ashort = htons(0x0200);
+			memcpy(data, &ashort, sizeof(ashort));
+			data += sizeof(ashort);
+			memset(data, 0, sizeof(ashort));
+			data += sizeof(ashort);
 			break;
 
 		case DIRPBIT_UNIXPR:
@@ -1929,12 +1838,7 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap,
 			   ProDOS information block.  Skip over the data and
 			   report nothing amiss. <shirsch@ibm.net> */
 		case DIRPBIT_PDINFO:
-			if (afp_version < 30) {
-				buf += 6;
-			} else {
-				err = AFPERR_BITMAP;
-				bitmap = 0;
-			}
+			buf += 6;
 			break;
 		case DIRPBIT_UNIXPR:
 			if (vol_unix_priv(vol)) {
@@ -2121,10 +2025,7 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap,
 			}
 			break;
 		case DIRPBIT_PDINFO:
-			if (afp_version >= 30) {
-				err = AFPERR_BITMAP;
-				goto setdirparam_done;
-			}
+			/* We don't support AFP3 */
 			break;
 		case DIRPBIT_UNIXPR:
 			if (vol_unix_priv(vol)) {
@@ -2549,10 +2450,8 @@ int afp_mapid(AFPObj * obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 	*rbuflen = 0;
 
 	if (sfunc >= 3 && sfunc <= 6) {
-		if (afp_version < 30) {
-			return (AFPERR_PARAM);
-		}
-		utf8 = 1;
+		/* We don't support AFP3 */
+		return (AFPERR_PARAM);
 	}
 
 	switch (sfunc) {
@@ -2688,14 +2587,8 @@ int afp_mapname(AFPObj * obj _U_, char *ibuf, size_t ibuflen _U_,
 	switch (sfunc) {
 	case 1:
 	case 2:		/* unicode */
-		if (afp_version < 30) {
-			return (AFPERR_PARAM);
-		}
-		memcpy(&ulen, ibuf, sizeof(ulen));
-		len = ntohs(ulen);
-		ibuf += 2;
-		LOG(log_debug, logtype_afpd, "afp_mapname: alive");
-		break;
+		/* We don't support AFP3 */
+		return (AFPERR_PARAM);
 	case 3:
 	case 4:
 		len = (unsigned char) *ibuf++;

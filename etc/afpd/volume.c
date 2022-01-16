@@ -1601,27 +1601,6 @@ static int getvolparams(u_int16_t bitmap, struct vol *vol, struct stat *st,
 				}
 				ashort |= VOLPBIT_ATTR_CATSEARCH;
 
-				if (afp_version >= 30) {
-					ashort |= VOLPBIT_ATTR_UTF8;
-					if (vol->v_flags &
-					    AFPVOL_UNIX_PRIV)
-						ashort |=
-						    VOLPBIT_ATTR_UNIXPRIV;
-					if (vol->v_flags & AFPVOL_TM)
-						ashort |= VOLPBIT_ATTR_TM;
-					if (vol->v_flags & AFPVOL_NONETIDS)
-						ashort |=
-						    VOLPBIT_ATTR_NONETIDS;
-					if (afp_version >= 32) {
-						if (vol->v_vfs_ea)
-							ashort |=
-							    VOLPBIT_ATTR_EXT_ATTRS;
-						if (vol->v_flags &
-						    AFPVOL_ACLS)
-							ashort |=
-							    VOLPBIT_ATTR_ACLS;
-					}
-				}
 			}
 			ashort = htons(ashort);
 			memcpy(data, &ashort, sizeof(ashort));
