@@ -487,6 +487,7 @@ int afp_getsession(AFPObj * obj,
 	return AFP_OK;
 }
 
+#if defined(ZAP_DSI)
 /* ---------------------- */
 int afp_disconnect(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 		   char *rbuf _U_, size_t *rbuflen)
@@ -575,6 +576,7 @@ int afp_disconnect(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 	    "afp_disconnect: primary reconnect failed");
 	return AFPERR_MISC;
 }
+#endif /* ZAP_DSI */
 
 /* ---------------------- */
 static int get_version(AFPObj * obj, char *ibuf, size_t ibuflen,

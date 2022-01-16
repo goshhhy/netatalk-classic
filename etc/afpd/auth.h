@@ -26,10 +26,12 @@ static const struct afp_versions  afp_versions[] = {
     { "AFPVersion 2.0", 20 },
     { "AFPVersion 2.1", 21 },
     { "AFP2.2", 22 },
+#if defined(NUKE_DSI)
     { "AFPX03", 30 },
     { "AFP3.1", 31 },
     { "AFP3.2", 32 },
     { "AFP3.3", 33 }
+#endif
 };
 
 /* for GetUserInfo */

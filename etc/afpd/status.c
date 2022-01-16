@@ -182,7 +182,9 @@ static size_t status_netaddress(char *data, int *servoffset,
 {
 	char *begin;
 	u_int16_t offset;
+#if defined(NUKE_DSI)
 	size_t addresses_len = 0;
+#endif
 
 	begin = data;
 
@@ -206,6 +208,7 @@ static size_t status_netaddress(char *data, int *servoffset,
 	    (((options->flags & OPTION_ANNOUNCESSH) && options->fqdn
 	      && dsi) ? 1 : 0);
 
+#if defined(NUKE_DSI)
 	/* ip address */
 	if (dsi) {
 		if (dsi->server.ss_family == AF_INET) {	/* IPv4 */
@@ -282,6 +285,7 @@ static size_t status_netaddress(char *data, int *servoffset,
 			}
 		}
 	}
+#endif
 
 	if (asp) {
 		const struct sockaddr_at *ddpaddr =
@@ -447,7 +451,7 @@ void status_init(AFPConfig * aspconfig, AFPConfig * dsiconfig,
 		 const struct afp_options *options)
 {
 	ASP asp;
-	DSI *dsi;
+	DSI *dsi = NULL;
 	char *status = NULL;
 	size_t statuslen;
 	int c, sigoff, ipok;
@@ -464,6 +468,7 @@ void status_init(AFPConfig * aspconfig, AFPConfig * dsiconfig,
 
 	ipok = 0;
 
+#if defined(NUKE_DSI)
 	if (dsiconfig) {
 		status = dsiconfig->status;
 		maxstatuslen = sizeof(dsiconfig->status);
@@ -482,8 +487,7 @@ void status_init(AFPConfig * aspconfig, AFPConfig * dsiconfig,
 				}
 			}
 		}
-	} else
-		dsi = NULL;
+#endif
 
 	/*
 	 * These routines must be called in order -- earlier calls
