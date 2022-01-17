@@ -3,7 +3,7 @@ Description=netatalk-classic AppleTalk protocol server for Macintosh clients
 After=network.target
 
 [Service]
-Type=simple
+Type=forking
 GuessMainPID=no
 ExecStart=:SBINDIR:/atalkd
 Restart=always
