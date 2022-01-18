@@ -66,8 +66,7 @@ install-data-hook:
 
 uninstall-startup:
 	-systemctl disable $(service_DATA)
-	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)	\
-		$(DESTDIR)$(servicedir)/$(service_DATA)
+	rm -f $(addprefix $(DESTDIR)$(servicedir)/, $(service_DATA))
 	-systemctl daemon-reload
 
 endif
