@@ -312,14 +312,8 @@ int afp_openfork(AFPObj * obj _U_, char *ibuf, size_t ibuflen _U_,
 	}
 	/* FIXME should we check it first ? */
 	upath = s_path->u_name;
-	if (!vol_unix_priv(vol)) {
-		if (check_access(upath, access) < 0) {
-			return AFPERR_ACCESS;
-		}
-	} else {
-		if (file_access(s_path, access) < 0) {
-			return AFPERR_ACCESS;
-		}
+	if (check_access(upath, access) < 0) {
+		return AFPERR_ACCESS;
 	}
 
 	st = &s_path->st;

@@ -713,8 +713,7 @@ int afp_moveandrename(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 			goto exit;
 		}
 
-		/* if unix priv don't try to match perm with dest folder */
-		if (!isdir && !vol_unix_priv(vol)) {
+		if (!isdir) {
 			int admode = ad_mode("", 0777) | vol->v_fperm;
 
 			setfilmode(vol, upath, admode,

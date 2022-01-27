@@ -1616,29 +1616,6 @@ int getdirparams(const struct vol *vol,
 			memset(data, 0, sizeof(ashort));
 			data += sizeof(ashort);
 			break;
-
-		case DIRPBIT_UNIXPR:
-			/* accessmode may change st_mode with ACLs */
-			accessmode(vol, upath, &ma, dir, st);
-
-			aint = htonl(st->st_uid);
-			memcpy(data, &aint, sizeof(aint));
-			data += sizeof(aint);
-			aint = htonl(st->st_gid);
-			memcpy(data, &aint, sizeof(aint));
-			data += sizeof(aint);
-
-			aint = st->st_mode;
-			aint = htonl(aint & ~S_ISGID);	/* Remove SGID, OSX doesn't like it ... */
-			memcpy(data, &aint, sizeof(aint));
-			data += sizeof(aint);
-
-			*data++ = ma.ma_user;
-			*data++ = ma.ma_world;
-			*data++ = ma.ma_group;
-			*data++ = ma.ma_owner;
-			break;
-
 		default:
 			if (isad) {
 				ad_close_metadata(&ad);
@@ -1770,9 +1747,7 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap,
 	int newdate = 0;
 	u_int16_t bitmap = d_bitmap;
 	u_char finder_buf[32];
-	u_int32_t upriv = 0;
 	mode_t mpriv = 0;
-	u_int16_t upriv_bit = 0;
 
 	bit = 0;
 	upath = path->u_name;
@@ -1840,35 +1815,6 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap,
 		case DIRPBIT_PDINFO:
 			buf += 6;
 			break;
-		case DIRPBIT_UNIXPR:
-			if (vol_unix_priv(vol)) {
-				memcpy(&owner, buf, sizeof(owner));	/* FIXME need to change owner too? */
-				buf += sizeof(owner);
-				memcpy(&group, buf, sizeof(group));
-				buf += sizeof(group);
-
-				change_mdate = 1;
-				change_parent_mdate = 1;
-				memcpy(&upriv, buf, sizeof(upriv));
-				buf += sizeof(upriv);
-				upriv = ntohl(upriv) | vol->v_dperm;
-				if (dir_rx_set(upriv)) {
-					/* maybe we are trying to set perms back */
-					if (setdirunixmode
-					    (vol, upath, upriv) < 0) {
-						bitmap = 0;
-						err =
-						    set_dir_errors(path,
-								   "setdirunixmode",
-								   errno);
-					}
-				} else {
-					/* do it later */
-					upriv_bit = 1;
-				}
-				break;
-			}
-			/* fall through */
 		default:
 			err = AFPERR_BITMAP;
 			bitmap = 0;
@@ -1891,8 +1837,7 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap,
 		 */
 		if (!vol_noadouble(vol) && (d_bitmap &
 					    ~((1 << DIRPBIT_ACCESS) |
-					      (1 << DIRPBIT_UNIXPR) | (1 <<
-								       DIRPBIT_UID)
+					      (1 << DIRPBIT_UID)
 					      | (1 << DIRPBIT_GID) | (1 <<
 								      DIRPBIT_MDATE)
 					      | (1 << DIRPBIT_PDINFO)))) {
@@ -2026,40 +1971,6 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap,
 			break;
 		case DIRPBIT_PDINFO:
 			/* We don't support AFP3 */
-			break;
-		case DIRPBIT_UNIXPR:
-			if (vol_unix_priv(vol)) {
-				if (dir->d_did == DIRDID_ROOT) {
-					if (!dir_rx_set(upriv)) {
-						/* we can't remove read and search for owner on volume root */
-						err = AFPERR_ACCESS;
-						goto setdirparam_done;
-					}
-					setdeskowner(-1, ntohl(group));
-					setdeskmode(upriv);
-				}
-				if (setdirowner
-				    (vol, upath, -1, ntohl(group)) < 0) {
-					err =
-					    set_dir_errors(path,
-							   "setdirowner",
-							   errno);
-					goto setdirparam_done;
-				}
-
-				if (upriv_bit
-				    && setdirunixmode(vol, upath,
-						      upriv) < 0) {
-					err =
-					    set_dir_errors(path,
-							   "setdirunixmode",
-							   errno);
-					goto setdirparam_done;
-				}
-			} else {
-				err = AFPERR_BITMAP;
-				goto setdirparam_done;
-			}
 			break;
 		default:
 			err = AFPERR_BITMAP;

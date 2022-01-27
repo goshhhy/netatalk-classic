@@ -188,8 +188,7 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
 				  (1 << FILPBIT_RFLEN) |\
 				  (1 << FILPBIT_EXTRFLEN) |\
 				  (1 << FILPBIT_PDINFO) |\
-				  (1 << FILPBIT_FNUM) |\
-				  (1 << FILPBIT_UNIXPR)))
+				  (1 << FILPBIT_FNUM)))
 
 /*!
  * @brief Get CNID for did/upath args both from database and adouble file
@@ -315,7 +314,6 @@ int getmetadata(struct vol *vol,
 	u_char achar, fdType[4];
 	u_int32_t utf8 = 0;
 	struct stat *st;
-	struct maccess ma;
 
 	LOG(log_debug, logtype_afpd, "getmetadata(\"%s\")", path->u_name);
 
@@ -582,41 +580,6 @@ int getmetadata(struct vol *vol,
 			memcpy(data, &aint, sizeof(aint));
 			data += sizeof(aint);
 			break;
-		case FILPBIT_UNIXPR:
-			/* accessmode may change st_mode with ACLs */
-			accessmode(vol, upath, &ma, dir, st);
-
-			aint = htonl(st->st_uid);
-			memcpy(data, &aint, sizeof(aint));
-			data += sizeof(aint);
-			aint = htonl(st->st_gid);
-			memcpy(data, &aint, sizeof(aint));
-			data += sizeof(aint);
-
-			/* FIXME: ugly hack
-			   type == slnk indicates an OSX style symlink, 
-			   we have to add S_IFLNK to the mode, otherwise
-			   10.3 clients freak out. */
-
-			aint = st->st_mode;
-			if (adp) {
-				memcpy(fdType,
-				       ad_entry(adp, ADEID_FINDERI), 4);
-				if (memcmp(fdType, "slnk", 4) == 0) {
-					aint |= S_IFLNK;
-				}
-			}
-			aint = htonl(aint);
-
-			memcpy(data, &aint, sizeof(aint));
-			data += sizeof(aint);
-
-			*data++ = ma.ma_user;
-			*data++ = ma.ma_world;
-			*data++ = ma.ma_group;
-			*data++ = ma.ma_owner;
-			break;
-
 		default:
 			return (AFPERR_BITMAP);
 		}
@@ -890,9 +853,6 @@ int setfilparams(struct vol *vol,
 	u_char *fdType = NULL;	/* "uninitialized, OK 310105" -- yeah, no */
 	u_int16_t ashort = 0;
 	u_int16_t bshort, oshort;
-	u_int32_t aint;
-	u_int32_t upriv;
-	u_int16_t upriv_bit = 0;
 
 	struct utimbuf ut;
 
@@ -900,8 +860,6 @@ int setfilparams(struct vol *vol,
 	int change_parent_mdate = 0;
 	int newdate = 0;
 	struct timeval tv;
-	uid_t f_uid;
-	gid_t f_gid;
 	u_int16_t bitmap = f_bitmap;
 	u_int32_t cdate = 0;
 	u_int32_t bdate = 0;
@@ -916,7 +874,7 @@ int setfilparams(struct vol *vol,
 	adp = of_ad(vol, path, &ad);
 	upath = path->u_name;
 
-	if (!vol_unix_priv(vol) && check_access(upath, OPENACC_WR) < 0) {
+	if (check_access(upath, OPENACC_WR) < 0) {
 		return AFPERR_ACCESS;
 	}
 
@@ -979,34 +937,6 @@ int setfilparams(struct vol *vol,
 			memcpy(finder_buf, buf, 32);
 			buf += 32;
 			break;
-		case FILPBIT_UNIXPR:
-			if (!vol_unix_priv(vol)) {
-				/* this volume doesn't use unix priv */
-				err = AFPERR_BITMAP;
-				bitmap = 0;
-				break;
-			}
-			change_mdate = 1;
-			change_parent_mdate = 1;
-
-			memcpy(&aint, buf, sizeof(aint));
-			f_uid = ntohl(aint);
-			buf += sizeof(aint);
-			memcpy(&aint, buf, sizeof(aint));
-			f_gid = ntohl(aint);
-			buf += sizeof(aint);
-			setfilowner(vol, f_uid, f_gid, path);
-
-			memcpy(&upriv, buf, sizeof(upriv));
-			buf += sizeof(upriv);
-			upriv = ntohl(upriv);
-			if ((upriv & S_IWUSR)) {
-				setfilunixmode(vol, path, upriv);
-			} else {
-				/* do it later */
-				upriv_bit = 1;
-			}
-			break;
 		case FILPBIT_PDINFO:
 			achar = *buf;
 			buf += 2;
@@ -1046,7 +976,7 @@ int setfilparams(struct vol *vol,
 		 */
 		if (!vol_noadouble(vol)
 		    && (f_bitmap &
-			~(1 << FILPBIT_MDATE | 1 << FILPBIT_UNIXPR))) {
+			~(1 << FILPBIT_MDATE))) {
 			LOG(log_debug, logtype_afpd,
 			    "setfilparams: need adouble access");
 			return AFPERR_ACCESS;
@@ -1107,11 +1037,6 @@ int setfilparams(struct vol *vol,
 			}
 			memcpy(ad_entry(adp, ADEID_FINDERI), finder_buf,
 			       32);
-			break;
-		case FILPBIT_UNIXPR:
-			if (upriv_bit) {
-				setfilunixmode(vol, path, upriv);
-			}
 			break;
 		case FILPBIT_PDINFO:
 			memcpy(ad_entry(adp, ADEID_FINDERI), fdType, 4);

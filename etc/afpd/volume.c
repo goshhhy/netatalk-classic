@@ -796,8 +796,6 @@ static int creatvol(AFPObj * obj, struct passwd *pwd, char *path, char *name, st
 			volume->v_ad_options |= ADVOL_NODEV;
 		if ((volume->v_flags & AFPVOL_CACHE))
 			volume->v_ad_options |= ADVOL_CACHE;
-		if ((volume->v_flags & AFPVOL_UNIX_PRIV))
-			volume->v_ad_options |= ADVOL_UNIXPRIV;
 		if ((volume->v_flags & AFPVOL_INV_DOTS))
 			volume->v_ad_options |= ADVOL_INVDOTS;
 		if ((volume->v_flags & AFPVOL_NOADOUBLE))
