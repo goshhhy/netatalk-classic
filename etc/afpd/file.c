@@ -1166,23 +1166,6 @@ int renamefile(const struct vol *vol, int sdir_fd, char *src, char *dst,
 	return (AFP_OK);
 }
 
-/* ---------------- 
-   convert a Mac long name to an utf8 name,
-*/
-size_t mtoUTF8(const struct vol *vol, const char *src, size_t srclen,
-	       char *dest, size_t destlen)
-{
-	size_t outlen;
-
-	if ((size_t) -1 ==
-	    (outlen =
-	     convert_string(vol->v_maccharset, CH_UTF8_MAC, src, srclen,
-			    dest, destlen))) {
-		return -1;
-	}
-	return outlen;
-}
-
 /* ---------------- */
 int copy_path_name(const struct vol *vol, char *newname, char *ibuf)
 {

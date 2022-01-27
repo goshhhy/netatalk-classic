@@ -626,22 +626,6 @@ int dircache_init(int reqsize)
 }
 
 /*!
- * Log dircache statistics
- */
-void log_dircache_stat(void)
-{
-	LOG(log_info, logtype_afpd, "dircache statistics: "
-	    "entries: %lu, lookups: %llu, hits: %llu, misses: %llu, added: %llu, removed: %llu, expunged: %llu, evicted: %llu",
-	    queue_count,
-	    dircache_stat.lookups,
-	    dircache_stat.hits,
-	    dircache_stat.misses,
-	    dircache_stat.added,
-	    dircache_stat.removed,
-	    dircache_stat.expunged, dircache_stat.evicted);
-}
-
-/*!
  * @brief Dump dircache to /tmp/dircache.PID
  */
 void dircache_dump(void)

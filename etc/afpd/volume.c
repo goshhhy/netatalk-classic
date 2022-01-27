@@ -2417,47 +2417,6 @@ struct extmap *getdefextmap(void)
 	return (Defextmap);
 }
 
-/* --------------------------
-   poll if a volume is changed by other processes.
-   return
-   0 no attention msg sent
-   1 attention msg sent
-   -1 error (socket closed)
-
-   Note: if attention return -1 no packet has been
-   sent because the buffer is full, we don't care
-   either there's no reader or there's a lot of
-   traffic and another pollvoltime will follow
-*/
-int pollvoltime(AFPObj * obj)
-{
-	struct vol *vol;
-	struct timeval tv;
-	struct stat st;
-
-	if (!(afp_version > 21 && obj->options.server_notif))
-		return 0;
-
-	if (gettimeofday(&tv, NULL) < 0)
-		return 0;
-
-	for (vol = Volumes; vol; vol = vol->v_next) {
-		if ((vol->v_flags & AFPVOL_OPEN)
-		    && vol->v_mtime + 30 < tv.tv_sec) {
-			if (!stat(vol->v_path, &st)
-			    && vol->v_mtime != st.st_mtime) {
-				vol->v_mtime = st.st_mtime;
-				if (!obj->attention(obj->handle,
-						    AFPATTN_NOTIFY |
-						    AFPATTN_VOLCHANGED))
-					return -1;
-				return 1;
-			}
-		}
-	}
-	return 0;
-}
-
 /* ------------------------- */
 void setvoltime(AFPObj * obj, struct vol *vol)
 {

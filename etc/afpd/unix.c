@@ -322,36 +322,6 @@ int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode)
 
 
 /* --------------------- */
-int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
-{
-
-	int dropbox = (vol->v_flags & AFPVOL_DROPBOX);
-
-	LOG(log_debug, logtype_afpd,
-	    "setdirunixmode('%s', mode:%04o) {v_dperm:%04o}",
-	    fullpathname(name), mode, vol->v_dperm);
-
-	mode |= vol->v_dperm;
-
-	if (dir_rx_set(mode)) {
-		/* extending right? dir first then .AppleDouble in rf_setdirmode */
-		if (stickydirmode
-		    (name, DIRBITS | mode, dropbox, vol->v_umask) < 0)
-			return -1;
-	}
-	if (vol->vfs->vfs_setdirunixmode(vol, name, mode, NULL) < 0
-	    && !vol_noadouble(vol)) {
-		return -1;
-	}
-	if (!dir_rx_set(mode)) {
-		if (stickydirmode
-		    (name, DIRBITS | mode, dropbox, vol->v_umask) < 0)
-			return -1;
-	}
-	return 0;
-}
-
-/* --------------------- */
 int setdirmode(const struct vol *vol, const char *name, mode_t mode)
 {
 	struct stat st;
