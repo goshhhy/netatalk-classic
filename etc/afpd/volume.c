@@ -2695,11 +2695,6 @@ static void handle_special_folders(const struct vol *vol)
 	}
 }
 
-const struct vol *getvolumes(void)
-{
-	return Volumes;
-}
-
 void unload_volumes_and_extmap(void)
 {
 	LOG(log_debug, logtype_afpd, "unload_volumes_and_extmap");

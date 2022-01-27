@@ -1128,12 +1128,6 @@ int afp_catsearch(AFPObj * obj, char *ibuf, size_t ibuflen,
 }
 
 
-int afp_catsearch_ext(AFPObj * obj, char *ibuf, size_t ibuflen,
-		      char *rbuf, size_t *rbuflen)
-{
-	return catsearch_afp(obj, ibuf, ibuflen, rbuf, rbuflen, 1);
-}
-
 /* FIXME: we need a clean separation between afp stubs and 'real' implementation */
 /* (so, all buffer packing/unpacking should be done in stub, everything else 
    should be done in other functions) */

@@ -475,17 +475,3 @@ int afp_enumerate(AFPObj * obj, char *ibuf, size_t ibuflen,
 {
 	return enumerate(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
 }
-
-/* ----------------------------- */
-int afp_enumerate_ext(AFPObj * obj, char *ibuf, size_t ibuflen,
-		      char *rbuf, size_t *rbuflen)
-{
-	return enumerate(obj, ibuf, ibuflen, rbuf, rbuflen, 1);
-}
-
-/* ----------------------------- */
-int afp_enumerate_ext2(AFPObj * obj, char *ibuf, size_t ibuflen,
-		       char *rbuf, size_t *rbuflen)
-{
-	return enumerate(obj, ibuf, ibuflen, rbuf, rbuflen, 2);
-}

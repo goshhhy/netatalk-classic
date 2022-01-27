@@ -231,15 +231,6 @@ char *demangle(const struct vol *vol, char *mfilename, cnid_t did)
 }
 
 /* -------------------------------------------------------
- * OS X  
-*/
-char *demangle_osx(const struct vol *vol, char *mfilename, cnid_t did,
-		   cnid_t * fileid)
-{
-	return private_demangle(vol, mfilename, did, fileid);
-}
-
-/* -------------------------------------------------------
    FIXME !!!
 
    Early Mac OS X (10.0-10.4.?) had the limitation up to 255 Byte.
