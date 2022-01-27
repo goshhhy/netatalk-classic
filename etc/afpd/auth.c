@@ -33,7 +33,6 @@
 #include "switch.h"
 #include "status.h"
 #include "fork.h"
-#include "extattrs.h"
 
 int afp_version = 11;
 static int afp_version_index;

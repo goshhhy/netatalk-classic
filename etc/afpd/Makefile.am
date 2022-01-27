@@ -17,7 +17,6 @@ afpd_SOURCES = \
 	dircache.c \
 	directory.c \
 	enumerate.c \
-	extattrs.c \
 	file.c \
 	filedir.c \
 	fork.c \
@@ -57,8 +56,7 @@ afpd_CFLAGS = \
 
 noinst_HEADERS = auth.h afp_config.h desktop.h directory.h file.h \
 	 filedir.h fork.h icon.h mangle.h misc.h status.h switch.h \
-	 uam_auth.h uid.h unix.h volume.h hash.h extattrs.h \
-	 dircache.h
+	 uam_auth.h uid.h unix.h volume.h hash.h dircache.h
 
 hash_SOURCES = hash.c
 hash_CFLAGS = -DKAZLIB_TEST_MAIN -I$(top_srcdir)/include
