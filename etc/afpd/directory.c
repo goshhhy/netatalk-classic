@@ -2392,8 +2392,7 @@ int afp_mapid(AFPObj * obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
 	case 5:		/* UUID -> username */
 	case 6:		/* UUID -> groupname */
-		if ((afp_version < 32)
-		    || !(obj->options.flags & OPTION_UUID))
+		if ( !(obj->options.flags & OPTION_UUID))
 			return AFPERR_PARAM;
 		LOG(log_debug, logtype_afpd,
 		    "afp_mapid: valid UUID request");
@@ -2486,8 +2485,7 @@ int afp_mapname(AFPObj * obj _U_, char *ibuf, size_t ibuflen _U_,
 		break;
 	case 5:		/* username -> UUID  */
 	case 6:		/* groupname -> UUID */
-		if ((afp_version < 32)
-		    || !(obj->options.flags & OPTION_UUID))
+		if ( !(obj->options.flags & OPTION_UUID))
 			return AFPERR_PARAM;
 		memcpy(&ulen, ibuf, sizeof(ulen));
 		len = ntohs(ulen);

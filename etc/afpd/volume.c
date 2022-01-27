@@ -2561,10 +2561,8 @@ void setvoltime(AFPObj * obj, struct vol *vol)
 	/* a little granularity */
 	if (vol->v_mtime < tv.tv_sec) {
 		vol->v_mtime = tv.tv_sec;
-		/* or finder doesn't update free space
-		 * AFP 3.2 and above clients seem to be ok without so many notification
-		 */
-		if (afp_version < 32 && obj->options.server_notif) {
+		/* or finder doesn't update free space */
+		if (obj->options.server_notif) {
 			obj->attention(obj->handle,
 				       AFPATTN_NOTIFY |
 				       AFPATTN_VOLCHANGED);

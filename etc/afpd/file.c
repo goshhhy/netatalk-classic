@@ -1191,7 +1191,7 @@ int copy_path_name(const struct vol *vol, char *newname, char *ibuf)
 	u_int16_t len16;
 	u_int32_t hint;
 
-	if (type != 2 && !(afp_version >= 30 && type == 3)) {
+	if (type != 2) {
 		return -1;
 	}
 	ibuf++;
@@ -1925,8 +1925,7 @@ int afp_resolveid(AFPObj * obj _U_, char *ibuf, size_t ibuflen _U_,
 
 	/* directories are bad */
 	if (S_ISDIR(path.st.st_mode)) {
-		/* OS9 and OSX don't return the same error code  */
-		return (afp_version >= 30) ? AFPERR_NOID : AFPERR_BADTYPE;
+		return AFPERR_BADTYPE;
 	}
 
 	memcpy(&bitmap, ibuf, sizeof(bitmap));
