@@ -682,8 +682,6 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
 	return ret;
 }
 
-#define ENUMVETO "./../Network Trash Folder/TheVolumeSettingsFolder/TheFindByContentFolder/:2eDS_Store/Contents/Desktop Folder/Trash/Benutzer/"
-
 int caseenumerate(const struct vol *vol, struct path *path,
 		  struct dir *dir)
 {
@@ -698,9 +696,6 @@ int caseenumerate(const struct vol *vol, struct path *path,
 	char *tmp, *savepath;
 
 	if (!(vol->v_flags & AFPVOL_CASEINSEN))
-		return -1;
-
-	if (veto_file(ENUMVETO, path->u_name))
 		return -1;
 
 	savepath = path->u_name;
