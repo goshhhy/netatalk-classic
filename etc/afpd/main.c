@@ -470,9 +470,7 @@ int main(int ac, char **av)
 				switch (polldata[i].fdtype) {
 
 				case LISTEN_FD:
-					config =
-					    (AFPConfig *) polldata[i].data;
-					/* config->server_start is afp_config.c:dsi_start() for DSI */
+					config = (AFPConfig *) polldata[i].data;
 					if ( (child =
 					      config->server_start(config,
 								 configs,
