@@ -1032,28 +1032,6 @@ int dbif_get(DBD * dbd, const int dbi, DBT * key, DBT * val,
 		return 1;
 }
 
-/* search by secondary return primary */
-int dbif_pget(DBD * dbd, const int dbi, DBT * key, DBT * pkey, DBT * val,
-	      u_int32_t flags)
-{
-	int ret;
-
-	ret = dbd->db_table[dbi].db->pget(dbd->db_table[dbi].db,
-					  dbd->db_txn,
-					  key, pkey, val, flags);
-
-	if (ret == DB_NOTFOUND || ret == DB_SECONDARY_BAD) {
-		return 0;
-	}
-	if (ret) {
-		LOG(log_error, logtype_cnid,
-		    "error retrieving value from %s: %s",
-		    dbd->db_table[dbi].name, db_strerror(ret));
-		return -1;
-	} else
-		return 1;
-}
-
 /* -------------------------- */
 int dbif_put(DBD * dbd, const int dbi, DBT * key, DBT * val,
 	     u_int32_t flags)
@@ -1283,27 +1261,6 @@ int dbif_txn_checkpoint(DBD * dbd, u_int32_t kbyte, u_int32_t min,
 		return -1;
 	} else
 		return 0;
-}
-
-int dbif_count(DBD * dbd, const int dbi, u_int32_t * count)
-{
-	int ret;
-	DB_BTREE_STAT *sp;
-	DB *db = dbd->db_table[dbi].db;
-
-	ret = db->stat(db, NULL, &sp, 0);
-
-	if (ret) {
-		LOG(log_error, logtype_cnid,
-		    "error getting stat infotmation on database: %s",
-		    db_strerror(ret));
-		return -1;
-	}
-
-	*count = sp->bt_ndata;
-	free(sp);
-
-	return 0;
 }
 
 int dbif_copy_rootinfokey(DBD * srcdbd, DBD * destdbd)
