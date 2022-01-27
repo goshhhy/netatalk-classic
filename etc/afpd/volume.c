@@ -486,9 +486,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
 				options[VOLOPT_PREEXEC].i_value = 1;
 			else if (strcasecmp(p, "root_preexec_close") == 0)
 				options[VOLOPT_ROOTPREEXEC].i_value = 1;
-			else if (strcasecmp(p, "upriv") == 0)
-				options[VOLOPT_FLAGS].i_value |=
-				    AFPVOL_UNIX_PRIV;
 			else if (strcasecmp(p, "nodev") == 0)
 				options[VOLOPT_FLAGS].i_value |=
 				    AFPVOL_NODEV;

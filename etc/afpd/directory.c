@@ -97,20 +97,7 @@ static int netatalk_mkdir(const struct vol *vol, const char *name)
 	int ret;
 	struct stat st;
 
-	if (vol->v_flags & AFPVOL_UNIX_PRIV) {
-		if (lstat(".", &st) < 0)
-			return AFPERR_MISC;
-		int mode =
-		    (DIRBITS & (~S_ISGID & st.st_mode)) | (0777 & ~vol->
-							   v_umask);
-		LOG(log_maxdebug, logtype_afpd,
-		    "netatalk_mkdir(\"%s\") {parent mode: %04o, vol umask: %04o}",
-		    name, st.st_mode, vol->v_umask);
-
-		ret = mkdir(name, mode);
-	} else {
-		ret = ad_mkdir(name, DIRBITS | 0777);
-	}
+	ret = ad_mkdir(name, DIRBITS | 0777);
 
 	if (ret < 0) {
 		switch (errno) {
