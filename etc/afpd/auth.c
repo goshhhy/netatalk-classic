@@ -60,7 +60,7 @@ static struct uam_obj uam_changepw =
 static struct uam_obj *afp_uam = NULL;
 
 
-void status_versions(char *data, const ASP asp, const DSI * dsi)
+void status_versions(char *data, const ASP asp)
 {
 	char *start = data;
 	u_int16_t status;
@@ -70,9 +70,7 @@ void status_versions(char *data, const ASP asp, const DSI * dsi)
 	num = sizeof(afp_versions) / sizeof(afp_versions[0]);
 
 	for (i = 0; i < num; i++) {
-		if (!asp && (afp_versions[i].av_number <= 21))
-			continue;
-		if (!dsi && (afp_versions[i].av_number >= 22))
+		if (afp_versions[i].av_number >= 22)
 			continue;
 		count++;
 	}
@@ -80,9 +78,7 @@ void status_versions(char *data, const ASP asp, const DSI * dsi)
 	*data++ = count;
 
 	for (i = 0; i < num; i++) {
-		if (!asp && (afp_versions[i].av_number <= 21))
-			continue;
-		if (!dsi && (afp_versions[i].av_number >= 22))
+		if (afp_versions[i].av_number >= 22)
 			continue;
 		len = strlen(afp_versions[i].av_name);
 		*data++ = len;
@@ -489,96 +485,6 @@ int afp_getsession(AFPObj * obj,
 	return AFP_OK;
 }
 
-#if defined(ZAP_DSI)
-/* ---------------------- */
-int afp_disconnect(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
-		   char *rbuf _U_, size_t *rbuflen)
-{
-	DSI *dsi = (DSI *) obj->handle;
-	u_int16_t type;
-	u_int32_t tklen;
-	pid_t token;
-	int i;
-
-	*rbuflen = 0;
-	ibuf += 2;
-
-#if 0
-	/* check for guest user */
-	if (0 == (strcasecmp(obj->username, obj->options.guest))) {
-		return AFPERR_MISC;
-	}
-#endif
-
-	memcpy(&type, ibuf, sizeof(type));
-	type = ntohs(type);
-	ibuf += sizeof(type);
-
-	memcpy(&tklen, ibuf, sizeof(tklen));
-	tklen = ntohl(tklen);
-	ibuf += sizeof(tklen);
-
-	if (sizeof(pid_t) > SESSIONTOKEN_LEN) {
-		LOG(log_error, logtype_afpd, "sizeof(pid_t) > %u",
-		    SESSIONTOKEN_LEN);
-		return AFPERR_MISC;
-	}
-	if (tklen != SESSIONTOKEN_LEN) {
-		return AFPERR_MISC;
-	}
-	tklen = sizeof(pid_t);
-	memcpy(&token, ibuf, tklen);
-
-	/* our stuff is pid + zero pad */
-	ibuf += tklen;
-	for (i = tklen; i < SESSIONTOKEN_LEN; i++, ibuf++) {
-		if (*ibuf != 0) {
-			return AFPERR_MISC;
-		}
-	}
-
-	LOG(log_note, logtype_afpd,
-	    "afp_disconnect: trying primary reconnect");
-	dsi->flags |= DSI_RECONINPROG;
-
-	/* Deactivate tickle timer */
-	const struct itimerval none = { { 0, 0 }, { 0, 0 } };
-	setitimer(ITIMER_REAL, &none, NULL);
-
-	/* check for old session, possibly transfering session from here to there */
-	if (ipc_child_write(obj->ipc_fd, IPC_DISCOLDSESSION, tklen, &token)
-	    != 0)
-		goto exit;
-	/* write uint16_t DSI request ID */
-	if (writet(obj->ipc_fd, &dsi->header.dsi_requestID, 2, 0, 2) != 2) {
-		LOG(log_error, logtype_afpd,
-		    "afp_disconnect: couldn't send DSI request ID");
-		goto exit;
-	}
-	/* now send our connected AFP client socket */
-	if (send_fd(obj->ipc_fd, dsi->socket) != 0)
-		goto exit;
-	/* Now see what happens: either afpd master sends us SIGTERM because our session */
-	/* has been transfered to a old disconnected session, or we continue    */
-	sleep(5);
-
-	if (!(dsi->flags & DSI_RECONINPROG)) {	/* deleted in SIGTERM handler */
-		/* Reconnect succeeded, we exit now after sleeping some more */
-		sleep(2);	/* sleep some more to give the recon. session time */
-		LOG(log_note, logtype_afpd,
-		    "afp_disconnect: primary reconnect succeeded");
-		exit(0);
-	}
-
-      exit:
-	/* Reinstall tickle timer */
-	setitimer(ITIMER_REAL, &dsi->timer, NULL);
-
-	LOG(log_error, logtype_afpd,
-	    "afp_disconnect: primary reconnect failed");
-	return AFPERR_MISC;
-}
-#endif /* ZAP_DSI */
 
 /* ---------------------- */
 static int get_version(AFPObj * obj, char *ibuf, size_t ibuflen,

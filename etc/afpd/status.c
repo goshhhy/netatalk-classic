@@ -177,14 +177,10 @@ static u_int16_t status_signature(char *data, int *servoffset,
 
 static size_t status_netaddress(char *data, int *servoffset,
 				const ASP asp,
-				const DSI * dsi,
 				const struct afp_options *options)
 {
 	char *begin;
 	u_int16_t offset;
-#if defined(NUKE_DSI)
-	size_t addresses_len = 0;
-#endif
 
 	begin = data;
 
@@ -203,89 +199,9 @@ static size_t status_netaddress(char *data, int *servoffset,
 	/* number of addresses. this currently screws up if we have a dsi
 	   connection, but we don't have the ip address. to get around this,
 	   we turn off the status flag for tcp/ip. */
-	*data++ = ((options->fqdn && dsi) ? 1 : 0) + (dsi ? 1 : 0) +
-	    (asp ? 1 : 0) +
-	    (((options->flags & OPTION_ANNOUNCESSH) && options->fqdn
-	      && dsi) ? 1 : 0);
 
-#if defined(NUKE_DSI)
-	/* ip address */
-	if (dsi) {
-		if (dsi->server.ss_family == AF_INET) {	/* IPv4 */
-			const struct sockaddr_in *inaddr =
-			    (struct sockaddr_in *) &dsi->server;
-			if (inaddr->sin_port == htons(DSI_AFPOVERTCP_PORT)) {
-				*data++ = 6;	/* length */
-				*data++ = 0x01;	/* basic ip address */
-				memcpy(data, &inaddr->sin_addr.s_addr,
-				       sizeof(inaddr->sin_addr.s_addr));
-				data += sizeof(inaddr->sin_addr.s_addr);
-				addresses_len += 7;
-			} else {
-				/* ip address + port */
-				*data++ = 8;
-				*data++ = 0x02;	/* ip address with port */
-				memcpy(data, &inaddr->sin_addr.s_addr,
-				       sizeof(inaddr->sin_addr.s_addr));
-				data += sizeof(inaddr->sin_addr.s_addr);
-				memcpy(data, &inaddr->sin_port,
-				       sizeof(inaddr->sin_port));
-				data += sizeof(inaddr->sin_port);
-				addresses_len += 9;
-			}
-		} else {	/* IPv6 */
-			const struct sockaddr_in6 *sa6 =
-			    (struct sockaddr_in6 *) &dsi->server;
-			if (sa6->sin6_port == htons(DSI_AFPOVERTCP_PORT)) {
-				*data++ = 18;	/* length */
-				*data++ = 6;	/* type */
-				memcpy(data, &sa6->sin6_addr.s6_addr,
-				       sizeof(sa6->sin6_addr.s6_addr));
-				data += sizeof(sa6->sin6_addr.s6_addr);
-				addresses_len += 19;
-			} else {
-				/* ip address + port */
-				*data++ = 20;	/* length */
-				*data++ = 7;	/* type */
-				memcpy(data, &sa6->sin6_addr.s6_addr,
-				       sizeof(sa6->sin6_addr.s6_addr));
-				data += sizeof(sa6->sin6_addr.s6_addr);
-				memcpy(data, &sa6->sin6_port,
-				       sizeof(sa6->sin6_port));
-				data += sizeof(sa6->sin6_port);
-				addresses_len += 21;
-			}
-
-		}
-	}
-
-	/* handle DNS names */
-	if (options->fqdn && dsi) {
-		size_t len = strlen(options->fqdn);
-		if (len + 2 + addresses_len < maxstatuslen - offset) {
-			*data++ = len + 2;
-			*data++ = 0x04;
-			memcpy(data, options->fqdn, len);
-			data += len;
-			addresses_len += len + 2;
-		}
-
-		/* Annouce support for SSH tunneled AFP session, 
-		 * this feature is available since 10.3.2.
-		 * According to the specs (AFP 3.1 p.225) this should
-		 * be an IP+Port style value, but it only works with 
-		 * a FQDN. OSX Server uses FQDN as well.
-		 */
-		if (len + 2 + addresses_len < maxstatuslen - offset) {
-			if (options->flags & OPTION_ANNOUNCESSH) {
-				*data++ = len + 2;
-				*data++ = 0x05;
-				memcpy(data, options->fqdn, len);
-				data += len;
-			}
-		}
-	}
-#endif
+	/* CK this reduces to 1 after removing DSI gunk */
+	*data++ = (asp ? 1 : 0);
 
 	if (asp) {
 		const struct sockaddr_at *ddpaddr =
@@ -315,7 +231,6 @@ static size_t status_netaddress(char *data, int *servoffset,
 }
 
 static size_t status_directorynames(char *data, int *diroffset,
-				    const DSI * dsi _U_,
 				    const struct afp_options *options)
 {
 	char *begin = data;
@@ -369,7 +284,6 @@ static size_t status_directorynames(char *data, int *diroffset,
 }
 
 static size_t status_utf8servername(char *data, int *nameoffset,
-				    const DSI * dsi _U_,
 				    const struct afp_options *options)
 {
 	char *Obj, *Type, *Zone;
@@ -447,16 +361,14 @@ static void status_icon(char *data, const unsigned char *icondata,
 
 /* ---------------------
  */
-void status_init(AFPConfig * aspconfig, AFPConfig * dsiconfig,
-		 const struct afp_options *options)
+void status_init(AFPConfig * aspconfig, const struct afp_options *options)
 {
 	ASP asp;
-	DSI *dsi = NULL;
 	char *status = NULL;
 	size_t statuslen;
 	int c, sigoff, ipok;
 
-	if (!(aspconfig || dsiconfig) || !options)
+	if (!aspconfig || !options)
 		return;
 
 	if (aspconfig) {
@@ -468,26 +380,6 @@ void status_init(AFPConfig * aspconfig, AFPConfig * dsiconfig,
 
 	ipok = 0;
 
-#if defined(NUKE_DSI)
-	if (dsiconfig) {
-		status = dsiconfig->status;
-		maxstatuslen = sizeof(dsiconfig->status);
-		dsi = dsiconfig->obj.handle;
-		if (dsi->server.ss_family == AF_INET) {	/* IPv4 */
-			const struct sockaddr_in *sa4 =
-			    (struct sockaddr_in *) &dsi->server;
-			ipok = sa4->sin_addr.s_addr ? 1 : 0;
-		} else {	/* IPv6 */
-			const struct sockaddr_in6 *sa6 =
-			    (struct sockaddr_in6 *) &dsi->server;
-			for (int i = 0; i < 16; i++) {
-				if (sa6->sin6_addr.s6_addr[i]) {
-					ipok = 1;
-					break;
-				}
-			}
-		}
-#endif
 
 	/*
 	 * These routines must be called in order -- earlier calls
@@ -519,7 +411,7 @@ void status_init(AFPConfig * aspconfig, AFPConfig * dsiconfig,
 	c = status_server(status, options->server ? options->server :
 			  options->hostname, options);
 	status_machine(status);
-	status_versions(status, asp, dsi);
+	status_versions(status, asp);
 	status_uams(status, options->uamlist);
 	if (options->flags & OPTION_CUSTOMICON)
 		status_icon(status, icon, sizeof(icon), c);
@@ -530,19 +422,17 @@ void status_init(AFPConfig * aspconfig, AFPConfig * dsiconfig,
 	sigoff = status_signature(status, &c, options);
 	/* c now contains the offset where the netaddress offset lives */
 
-	status_netaddress(status, &c, asp, dsi, options);
+	status_netaddress(status, &c, asp, options);
 	/* c now contains the offset where the Directory Names Count offset lives */
 
-	statuslen = status_directorynames(status, &c, dsi, options);
+	statuslen = status_directorynames(status, &c, options);
 	/* c now contains the offset where the UTF-8 ServerName offset lives */
 
 	if (statuslen < maxstatuslen)
 		statuslen =
-		    status_utf8servername(status, &c, dsi, options);
+		    status_utf8servername(status, &c, options);
 
 	if (aspconfig) {
-		if (dsiconfig)	/* status is dsiconfig->status */
-			memcpy(aspconfig->status, status, statuslen);
 		asp_setstatus(asp, status, statuslen);
 		aspconfig->signature = status + sigoff;
 		aspconfig->statuslen = statuslen;

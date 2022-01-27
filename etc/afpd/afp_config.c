@@ -225,7 +225,6 @@ static AFPConfig *AFPConfigInit(struct afp_options *options,
 	    (config = ASPConfigInit(options, refcount)))
 		config->defoptions = defoptions;
 
-
 	/* set signature */
 	set_signature(options);
 
@@ -238,7 +237,7 @@ static AFPConfig *AFPConfigInit(struct afp_options *options,
 
 	/* this should be able to accept multiple dsi transports. i think
 	 * the only thing that gets affected is the net addresses. */
-	status_init(config, next, options);
+	status_init(config, options);
 
 	/* attach dsi config to tail of asp config */
 	if (config) {
