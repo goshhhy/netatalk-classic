@@ -81,6 +81,7 @@ int ps(struct papfile *infile, struct papfile *outfile,
 				return (0);
 
 			case -1:
+                spoolreply(outfile, "Processing...");
 				return (0);
 			}
 
@@ -138,6 +139,7 @@ int cm_psquery(struct papfile *in, struct papfile *out,
 			return (CH_DONE);
 
 		case -1:
+            spoolreply(out, "Processing...");
 			return (CH_MORE);
 
 		case -2:
