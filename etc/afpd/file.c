@@ -1758,7 +1758,6 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
 	/* update or add to cnid */
 	aint = cnid_add(vol->v_cdb, &path.st, did, de->d_name, strlen(de->d_name), 0);	/* ignore errors */
 
-#if AD_VERSION > AD_VERSION1
 	if (aint != CNID_INVALID && !S_ISDIR(path.st.st_mode)) {
 		struct adouble ad, *adp;
 
@@ -1778,7 +1777,6 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
 		}
 		ad_close_metadata(adp);
 	}
-#endif				/* AD_VERSION > AD_VERSION1 */
 
 	return 0;
 }
