@@ -24,6 +24,30 @@ netatalk-classic is an attempt at creating a codebase that effectively and secur
 
 * For now, use whichever init files your distribution uses for netatalk-2.2.x.  In the near future, working systemd unit files will be installed if the build framework detects /usr/lib/systemd/system
 
+## Coming soon?
+
+* sqlite backend for CNID.
+
+* Less crufty .ini configuration parsing.
+
+* Transparent handling of BinHex/MacBinary formats.
+
+## News for 20210128:
+
+* DSI support (and thus AFP3.x) has been completely removed from afpd.  The possible attack surface is much, much smaller now.
+
+* Code that was orphaned by DSI/obsolete platform removal has been removed.  The codebase is much easier to understand now.
+
+* cppcheck revealed a number of unsafe bitwise arithmetic.  Unambiguous types have been used where appropriate.
+
+* afprun() (i.e., "the pass-random-things-to-a-root-shell routine") has been taken out back and shot.
+
+* Kerberos support removed.
+
+* CNID now only supports BerkeleyDB and "last" backends.
+
+* Miscellaneous platform/portability fixes from @rdmark and Florian Kolb
+
 ## News for 20200923:
 
 * Ubuntu ships an older version of gcc that is much more paranoid than the version shipped with NetBSD and ArchLinux, so it flagged many cases of system call return values being ignored.  That might not be a problem for chown() and chdir(), but we definitely want to know when seteuid() and siblings are having problems.  Warnings are now logged when system calls fail.
