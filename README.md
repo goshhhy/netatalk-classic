@@ -1,4 +1,4 @@
-# Current release: netatalk-classic-20200923
+# Current release: netatalk-classic-20220128
 
 netatalk-classic is an implementation of the AppleTalk Protocol Suite for Linux
 and NetBSD.
