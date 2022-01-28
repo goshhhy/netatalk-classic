@@ -46,7 +46,8 @@ int afp_opendt(AFPObj * obj _U_, char *ibuf, size_t ibuflen _U_,
 	ibuf += 2;
 
 	memcpy(&vid, ibuf, sizeof(vid));
-	if (NULL == (vol = getvolbyvid(vid))) {
+	vol = getvolbyvid(vid);
+	if (vol == NULL) {
 		*rbuflen = 0;
 		return (AFPERR_PARAM);
 	}
@@ -349,7 +350,6 @@ int afp_geticon(AFPObj * obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 		size_t *rbuflen)
 {
 	struct vol *vol;
-	off_t offset;
 	ssize_t rc;
 	u_char fcreator[4], ftype[4], itype, ih[12];
 	u_int16_t vid, bsize, rsize;
@@ -385,10 +385,8 @@ int afp_geticon(AFPObj * obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 	}
 
 	si.sdt_index = 1;
-	offset = 0;
 	while ((rc = read(si.sdt_fd, ih, sizeof(ih))) > 0) {
 		si.sdt_index++;
-		offset += sizeof(ih);
 		if (memcmp(ih + sizeof(int), ftype, sizeof(ftype)) == 0 &&
 		    *(ih + sizeof(int) + sizeof(ftype)) == itype) {
 			break;
@@ -402,7 +400,6 @@ int afp_geticon(AFPObj * obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 			    strerror(errno));
 			return (AFPERR_PARAM);
 		}
-		offset += rsize;
 	}
 
 	if (rc < 0) {
