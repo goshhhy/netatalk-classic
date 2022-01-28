@@ -106,14 +106,6 @@ static int is_power_of_two(hash_val_t arg)
  * Compute a shift amount from a given table size
  */
 
-static hash_val_t compute_mask(hashcount_t size)
-{
-	assert(is_power_of_two(size));
-	assert(size >= 2);
-
-	return size - 1;
-}
-
 /*
  * Initialize the table of pointers to null.
  */
@@ -341,50 +333,6 @@ void hash_set_allocator(hash_t * hash, hnode_alloc_t al,
 }
 
 /*
- * Free every node in the hash using the hash->freenode() function pointer, and
- * cause the hash to become empty.
- */
-
-void hash_free_nodes(hash_t * hash)
-{
-	hscan_t hs;
-	hnode_t *node;
-	hash_scan_begin(&hs, hash);
-	while ((node = hash_scan_next(&hs))) {
-		hash_scan_delete(hash, node);
-		hash->freenode(node, hash->context);
-	}
-	hash->nodecount = 0;
-	clear_table(hash);
-}
-
-/*
- * Obsolescent function for removing all nodes from a table,
- * freeing them and then freeing the table all in one step.
- */
-
-void hash_free(hash_t * hash)
-{
-#ifdef KAZLIB_OBSOLESCENT_DEBUG
-	assert("call to obsolescent function hash_free()" && 0);
-#endif
-	hash_free_nodes(hash);
-	hash_destroy(hash);
-}
-
-/*
- * Free a dynamic hash table structure.
- */
-
-void hash_destroy(hash_t * hash)
-{
-	assert(hash_val_t_bit != 0);
-	assert(hash_isempty(hash));
-	free(hash->table);
-	free(hash);
-}
-
-/*
  * Initialize a user supplied hash structure. The user also supplies a table of
  * chains which is assigned to the hash structure. The table is static---it
  * will not grow or shrink.
@@ -396,30 +344,6 @@ void hash_destroy(hash_t * hash)
  * 5. The user supplied table can't be assumed to contain null pointers,
  *    so we reset it here.
  */
-
-hash_t *hash_init(hash_t * hash, hashcount_t maxcount,
-		  hash_comp_t compfun, hash_fun_t hashfun,
-		  hnode_t ** table, hashcount_t nchains)
-{
-	if (hash_val_t_bit == 0)	/* 1 */
-		compute_bits();
-
-	assert(is_power_of_two(nchains));
-
-	hash->table = table;	/* 2 */
-	hash->nchains = nchains;
-	hash->nodecount = 0;
-	hash->maxcount = maxcount;
-	hash->compare = compfun ? compfun : hash_comp_default;
-	hash->function = hashfun ? hashfun : hash_fun_default;
-	hash->dynamic = 0;	/* 3 */
-	hash->mask = compute_mask(nchains);	/* 4 */
-	clear_table(hash);	/* 5 */
-
-	assert(hash_verify(hash));
-
-	return hash;
-}
 
 /*
  * Reset the hash scanner so that the next element retrieved by
@@ -722,26 +646,9 @@ int hash_verify(hash_t * hash)
 }
 
 /*
- * Test whether the hash table is full and return 1 if this is true,
- * 0 if it is false.
- */
-
-#undef hash_isfull
-int hash_isfull(hash_t * hash)
-{
-	return hash->nodecount == hash->maxcount;
-}
-
-/*
  * Test whether the hash table is empty and return 1 if this is true,
  * 0 if it is false.
  */
-
-#undef hash_isempty
-int hash_isempty(hash_t * hash)
-{
-	return hash->nodecount == 0;
-}
 
 static hnode_t *hnode_alloc(void *context _U_)
 {
@@ -753,21 +660,6 @@ static void hnode_free(hnode_t * node, void *context _U_)
 	free(node);
 }
 
-
-/*
- * Create a hash table node dynamically and assign it the given data.
- */
-
-hnode_t *hnode_create(void *data)
-{
-	hnode_t *node = malloc(sizeof *node);
-	if (node) {
-		node->data = data;
-		node->next = NULL;
-	}
-	return node;
-}
-
 /*
  * Initialize a client-supplied node
  */
@@ -777,21 +669,6 @@ hnode_t *hnode_init(hnode_t * hnode, void *data)
 	hnode->data = data;
 	hnode->next = NULL;
 	return hnode;
-}
-
-/*
- * Destroy a dynamically allocated node.
- */
-
-void hnode_destroy(hnode_t * hnode)
-{
-	free(hnode);
-}
-
-#undef hnode_put
-void hnode_put(hnode_t * node, void *data)
-{
-	node->data = data;
 }
 
 #undef hnode_get
