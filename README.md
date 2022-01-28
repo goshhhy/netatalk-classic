@@ -32,7 +32,7 @@ netatalk-classic is an attempt at creating a codebase that effectively and secur
 
 * Transparent handling of BinHex/MacBinary formats.
 
-## News for 20210128:
+## News for 20220128:
 
 * DSI support (and thus AFP3.x) has been completely removed from afpd.  The possible attack surface is much, much smaller now.
 
