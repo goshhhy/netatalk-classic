@@ -81,23 +81,23 @@ sysvdir = /etc/rc.d
 sysv_SCRIPTS = afpd atalkd cnid_metad papd timelord
 
 afpd: rc.afpd.netbsd
-	cp -f $< $@
+	cp -f $? $@
 	chmod a+x $@
 
 atalkd: rc.atalkd.netbsd
-	cp -f $< $@
+	cp -f $? $@
 	chmod a+x $@
 
 cnid_metad: rc.cnid_metad.netbsd
-	cp -f $< $@
+	cp -f $? $@
 	chmod a+x $@
 
 papd: rc.papd.netbsd
-	cp -f $< $@
+	cp -f $? $@
 	chmod a+x $@
 
 timelord: rc.timelord.netbsd
-	cp -f $< $@
+	cp -f $? $@
 	chmod a+x $@
 
 install-data-hook:
