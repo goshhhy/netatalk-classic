@@ -368,15 +368,12 @@ void status_init(AFPConfig * aspconfig, const struct afp_options *options)
 	size_t statuslen;
 	int c, sigoff, ipok;
 
-	if (!aspconfig || !options)
+	if (!options)
 		return;
 
-	if (aspconfig) {
-		status = aspconfig->status;
-		maxstatuslen = sizeof(aspconfig->status);
-		asp = aspconfig->obj.handle;
-	} else
-		asp = NULL;
+	status = aspconfig->status;
+	maxstatuslen = sizeof(aspconfig->status);
+	asp = aspconfig->obj.handle;
 
 	ipok = 0;
 
@@ -432,11 +429,9 @@ void status_init(AFPConfig * aspconfig, const struct afp_options *options)
 		statuslen =
 		    status_utf8servername(status, &c, options);
 
-	if (aspconfig) {
-		asp_setstatus(asp, status, statuslen);
-		aspconfig->signature = status + sigoff;
-		aspconfig->statuslen = statuslen;
-	}
+	asp_setstatus(asp, status, statuslen);
+	aspconfig->signature = status + sigoff;
+	aspconfig->statuslen = statuslen;
 
 }
 
