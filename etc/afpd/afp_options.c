@@ -193,7 +193,6 @@ void afp_options_init(struct afp_options *options)
 	options->flags |= OPTION_UUID;
 	options->tcp_sndbuf = 0;	/* 0 means don't change OS default */
 	options->tcp_rcvbuf = 0;	/* 0 means don't change OS default */
-	options->dsireadbuf = 12;
 	options->mimicmodel = NULL;
 	options->fce_fmodwait = 60;	/* put fmod events 60 seconds on hold */
 	options->adminauthuser = NULL;
@@ -201,9 +200,9 @@ void afp_options_init(struct afp_options *options)
 
 /* parse an afpd.conf line. i'm doing it this way because it's
  * easy. it is, however, massively hokey. sample afpd.conf:
- * server:AFPServer@zone -loginmesg "blah blah blah" -nodsi 
+ * server:AFPServer@zone -loginmesg "blah blah blah"
  * "private machine"@zone2 -noguest -port 11012
- * server2 -nocleartxt -nodsi
+ * server2 -nocleartxt
  *
  * NOTE: this ignores unknown options 
  */
@@ -251,21 +250,6 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 	if (strstr(buf, " -setpassword"))
 		options->passwdbits |= PASSWD_SET;
 
-#if defined(__OBSOLETE__)
-	/* transports */
-	if (strstr(buf, " -transall"))
-		options->transports = AFPTRANS_ALL;
-	if (strstr(buf, " -notransall"))
-		options->transports = AFPTRANS_NONE;
-	if (strstr(buf, " -tcp"))
-		options->transports |= AFPTRANS_TCP;
-	if (strstr(buf, " -notcp"))
-		options->transports &= ~AFPTRANS_TCP;
-	if (strstr(buf, " -ddp"))
-		options->transports |= AFPTRANS_DDP;
-	if (strstr(buf, " -noddp"))
-		options->transports &= ~AFPTRANS_DDP;
-#endif
 	if (strstr(buf, "-client_polling"))
 		options->server_notif = 0;
 
@@ -331,14 +315,6 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 		}
 	}
 
-#if defined(__OBSOLETE__)
-	if ((c = getoption(buf, "-dsireadbuf"))) {
-		options->dsireadbuf = atoi(c);
-		if (options->dsireadbuf < 6)
-			options->dsireadbuf = 6;
-	}
-#endif
-
 	if ((c = getoption(buf, "-server_quantum")))
 		options->server_quantum = strtoul(c, NULL, 0);
 
@@ -368,11 +344,6 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 		}
 	}
 
-#if defined(__OBSOLETE__)
-	if ((c = getoption(buf, "-unsetuplog")))
-		unsetuplog(c);
-#endif
-
 #ifdef ADMIN_GRP
 	if ((c = getoption(buf, "-admingroup"))) {
 		struct group *gr = getgrnam(c);
@@ -382,24 +353,6 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 	}
 #endif				/* ADMIN_GRP */
 
-#if defined(__OBSOLETE__)
-	if ((c = getoption(buf, "-k5service")) && (opt = strdup(c)))
-		options->k5service = opt;
-	if ((c = getoption(buf, "-k5realm")) && (opt = strdup(c)))
-		options->k5realm = opt;
-	if ((c = getoption(buf, "-k5keytab"))) {
-		if (NULL ==
-		    (options->k5keytab =
-		     (char *) malloc(sizeof(char) * (strlen(c) + 14)))) {
-			LOG(log_error, logtype_afpd, "malloc failed");
-			exit(-1);
-		}
-		snprintf(options->k5keytab, strlen(c) + 14,
-			 "KRB5_KTNAME=%s", c);
-		putenv(options->k5keytab);
-		/* setenv( "KRB5_KTNAME", c, 1 ); */
-	}
-#endif
 	if ((c = getoption(buf, "-authprintdir")) && (opt = strdup(c)))
 		options->authprintdir = opt;
 	if ((c = getoption(buf, "-uampath")) && (opt = strdup(c)))

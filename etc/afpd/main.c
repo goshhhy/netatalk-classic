@@ -267,7 +267,7 @@ int main(int ac, char **av)
 
 	atexit(afp_exit);
 
-	/* install child handler for asp and dsi. we do this before afp_goaway
+	/* install child handler for asp. we do this before afp_goaway
 	 * as afp_goaway references stuff from here. 
 	 * XXX: this should really be setup after the initial connections. */
 	if (!
@@ -385,7 +385,7 @@ int main(int ac, char **av)
 	/* Register CNID  */
 	cnid_init();
 
-	/* watch atp, dsi sockets and ipc parent/child file descriptor. */
+	/* watch atp and ipc parent/child file descriptor. */
 
 	if (default_options.flags & OPTION_KEEPSESSIONS) {
 		LOG(log_note, logtype_afpd,
@@ -404,7 +404,7 @@ int main(int ac, char **av)
 	int saveerrno;
 
 	/* wait for an appleshare connection. parent remains in the loop
-	 * while the children get handled by afp_over_{asp,dsi}.  this is
+	 * while the children get handled by afp_over_asp.  this is
 	 * currently vulnerable to a denial-of-service attack if a
 	 * connection is made without an actual login attempt being made
 	 * afterwards. establishing timeouts for logins is a possible 

@@ -19,7 +19,6 @@
 
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
-#include <atalk/dsi.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/nbp.h>
@@ -196,10 +195,7 @@ static size_t status_netaddress(char *data, int *servoffset,
 	   address (up to 254 bytes, ip = 4, ip + port = 6, ddp = 4)
 	 */
 
-	/* number of addresses. this currently screws up if we have a dsi
-	   connection, but we don't have the ip address. to get around this,
-	   we turn off the status flag for tcp/ip. */
-
+	/* number of addresses */
 	/* CK this reduces to 1 after removing DSI gunk */
 	*data++ = (asp ? 1 : 0);
 
@@ -645,7 +641,7 @@ void set_signature(struct afp_options *options)
 	return;
 }
 
-/* this is the same as asp/dsi_getstatus */
+/* this is the same as asp_getstatus */
 int afp_getsrvrinfo(AFPObj * obj, char *ibuf _U_, size_t ibuflen _U_,
 		    char *rbuf, size_t *rbuflen)
 {

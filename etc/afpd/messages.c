@@ -164,7 +164,7 @@ int afp_getsrvrmesg(AFPObj * obj, char *ibuf, size_t ibuflen _U_,
 	 * message type:   2 bytes
 	 * bitmap:         2 bytes
 	 * message length: 1 byte ( 2 bytes for utf8)
-	 * message:        up to 199 bytes (dsi attn_quantum for utf8)
+	 * message:        up to 199 bytes
 	 */
 	memcpy(rbuf, &type, sizeof(type));
 	rbuf += sizeof(type);

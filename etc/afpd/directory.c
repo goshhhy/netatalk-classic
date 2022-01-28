@@ -79,7 +79,6 @@ struct path Cur_Path = {
  * So instead:
  * - we mark it as invalid by setting d_did to CNID_INVALID (ie 0)
  * - queue it in "invalid_dircache_entries" queue
- * - which is finally freed at the end of every AFP func in afp_dsi.c.
  */
 q_t *invalid_dircache_entries;
 

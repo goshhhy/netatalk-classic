@@ -24,7 +24,6 @@
 #include <atalk/errchk.h>
 #include <atalk/paths.h>
 #include <atalk/globals.h>
-#include <atalk/dsi.h>
 
 #define IPC_HEADERLEN 14
 #define IPC_MAXMSGSIZE 90

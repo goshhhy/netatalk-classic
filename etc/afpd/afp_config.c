@@ -203,9 +203,7 @@ static AFPConfig *ASPConfigInit(const struct afp_options *options,
 }
 
 
-/* allocate server configurations. this should really store the last
- * entry in config->last or something like that. that would make
- * supporting multiple dsi transports easier. */
+/* allocate server configurations */
 static AFPConfig *AFPConfigInit(struct afp_options *options,
 				const struct afp_options *defoptions)
 {
@@ -235,11 +233,9 @@ static AFPConfig *AFPConfigInit(struct afp_options *options,
 	 */
 	auth_load(options->uampath, options->uamlist);
 
-	/* this should be able to accept multiple dsi transports. i think
-	 * the only thing that gets affected is the net addresses. */
 	status_init(config, options);
 
-	/* attach dsi config to tail of asp config */
+	/* attach dsi config to tail of asp config - CK investigate */
 	if (config) {
 		config->next = next;
 		return config;

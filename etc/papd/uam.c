@@ -23,7 +23,6 @@
 
 #include <netatalk/endian.h>
 #include <atalk/asp.h>
-#include <atalk/dsi.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
 
