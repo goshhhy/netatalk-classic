@@ -67,9 +67,6 @@ struct llc {
 #define LLC_ISO_LSAP	0xfe
 #define LLC_SNAP_LSAP	0xaa
 
-#endif				/* __NetBSD__ */
-
-#if defined( __NetBSD__ )
 #define SIOCPHASE1	_IOW('i', 100, struct ifreq)	/* AppleTalk phase 1 */
 #define SIOCPHASE2	_IOW('i', 101, struct ifreq)	/* AppleTalk phase 2 */
 #endif				/* __NetBSD__ */
