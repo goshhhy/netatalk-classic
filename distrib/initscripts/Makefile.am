@@ -63,6 +63,8 @@ service_DATA	= a2boot.service afpd.service atalkd.service cnid.service papd.serv
 
 install-data-hook:
 	-systemctl daemon-reload
+	-systemctl enable $(service_DATA)
+	-systemctl start $(service_DATA)
 
 uninstall-startup:
 	-systemctl disable $(service_DATA)
