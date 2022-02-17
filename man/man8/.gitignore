@@ -9,5 +9,4 @@ papd.8
 papstatus.8
 psf.8
 timelord.8
-.gitignore
 *.o
