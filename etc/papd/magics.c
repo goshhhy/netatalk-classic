@@ -105,6 +105,7 @@ int ps(struct papfile *infile, struct papfile *outfile,
 			CONSUME(infile, linelength + crlflength);
 		}
 	}
+    return 0;
 }
 
 int cm_psquery(struct papfile *in, struct papfile *out,

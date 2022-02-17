@@ -52,17 +52,14 @@
 #include <sys/fcntl.h>
 #endif /* HAVE_SYS_FCNTL_H */
 
-#ifdef HAVE_TERMIOS_H
 #include <termios.h>
-#endif /* HAVE_TERMIOS_H */
-#ifdef HAVE_SYS_TERMIOS_H
-#include <sys/termios.h>
-#endif /* HAVE_SYS_TERMIOS_H */
+#include <sys/ioctl.h>
 
 #define	TL_GETTIME	0
 #define	TL_OK		12
 #define TL_BAD		10
 #define EPOCH		0x7C25B080	/* 00:00:00 GMT Jan 1, 1970 for Mac */
+#define SIZEOF_MAC_LONG 4
 
 int	debug = 0;
 char	*bad = "Bad request!";
@@ -78,7 +75,7 @@ void usage( char *p )
     } else {
 	s++;
     }
-    fprintf( stderr, "Usage:\t%s -d -n nbpname\n", s );
+    fprintf( stderr, "Usage:\t%s -d -l -n nbpname\n", s );
     exit( 1 );
 }
 
@@ -102,12 +99,12 @@ int main( int ac, char **av )
     struct sockaddr_at	sat;
     struct atp_block	atpb;
     struct timeval	tv;
-    struct timezone	tz;
     struct iovec	iov;
     struct tm		*tm;
     char		hostname[ MAXHOSTNAMELEN ];
     char		*p;
     int			c;
+    int         lflag = 0;
     long		req, mtime, resp;
     extern char		*optarg;
     extern int		optind;
@@ -121,11 +118,14 @@ int main( int ac, char **av )
     }
     server = hostname;
 
-    while (( c = getopt( ac, av, "dn:" )) != EOF ) {
+    while (( c = getopt( ac, av, "dln:" )) != EOF ) {
 	switch ( c ) {
 	case 'd' :
 	    debug++;
 	    break;
+    case 'l':
+        lflag = 1;
+        break;
 	case 'n' :
 	    server = optarg;
 	    break;
@@ -183,6 +183,12 @@ int main( int ac, char **av )
 	exit( 1 );
     }
     LOG(log_info, logtype_default, "%s:TimeLord started", server );
+    if ( lflag == 1 ) {
+        LOG(log_info, logtype_default, "Time zone is localtime" );
+    }
+    else {
+        LOG(log_info, logtype_default, "Time zone is GMT" );
+    }
 
 	signal(SIGHUP, goaway);
 	signal(SIGTERM, goaway);
@@ -202,14 +208,14 @@ int main( int ac, char **av )
 	}
 
 	p = buf;
-	bcopy( p, &req, sizeof( long ));
+	bcopy( p, &req, SIZEOF_MAC_LONG);
 	req = ntohl( req );
-	p += sizeof( long );
+	p += SIZEOF_MAC_LONG;
 
 	switch( req ) {
 	case TL_GETTIME :
 	    if ( atpb.atp_rreqdlen > 5 ) {
-		    bcopy( p + 1, &mtime, sizeof( long ));
+		    bcopy( p + 1, &mtime, SIZEOF_MAC_LONG);
 		    mtime = ntohl( mtime );
 		    LOG(log_info, logtype_default, "gettime from %s %s was %lu",
 			    (*( p + 5 ) == '\0' ) ? "<unknown>" : p + 5,
@@ -219,32 +225,44 @@ int main( int ac, char **av )
 		    LOG(log_info, logtype_default, "gettime" );
 	    }
 
-	    if ( gettimeofday( &tv, &tz ) < 0 ) {
+	    if ( gettimeofday( &tv, NULL ) < 0 ) {
 		LOG(log_error, logtype_default, "main: gettimeofday: %s", strerror( errno ) );
 		exit( 1 );
 	    }
-	    if (( tm = gmtime( &tv.tv_sec )) == 0 ) {
-		perror( "localtime" );
-		exit( 1 );
-	    }
 
-	    mtime = tv.tv_sec + EPOCH;
+        if ( lflag == 1 ) {
+            if (( tm = localtime( &tv.tv_sec )) == 0 ) {
+            perror( "localtime" );
+            exit( 1 );
+            }
+
+            mtime = tv.tv_sec + EPOCH + tm->tm_gmtoff;
+        }
+        else {
+            if (( tm = gmtime( &tv.tv_sec )) == 0 ) {
+            perror( "gmtime" );
+            exit( 1 );
+            }
+
+            mtime = tv.tv_sec + EPOCH;
+        }
+
 	    mtime = htonl( mtime );
 
-	    resp = TL_OK;
-	    bcopy( &resp, buf, sizeof( long ));
-	    bcopy( &mtime, buf + sizeof( long ), sizeof( long ));
-	    iov.iov_len = sizeof( long ) + sizeof( long );
+	    resp = htonl( TL_OK );
+	    bcopy( &resp, buf, SIZEOF_MAC_LONG);
+	    bcopy( &mtime, buf + SIZEOF_MAC_LONG, SIZEOF_MAC_LONG);
+	    iov.iov_len = SIZEOF_MAC_LONG + SIZEOF_MAC_LONG;
 	    break;
 
 	default :
 	    LOG(log_error, logtype_default, bad );
 
-	    resp = TL_BAD;
-	    bcopy( &resp, buf, sizeof( long ));
+	    resp = htonl( TL_BAD );
+	    bcopy( &resp, buf, SIZEOF_MAC_LONG);
 	    *( buf + 4 ) = (unsigned char)strlen( bad );
 	    strcpy( buf + 5, bad );
-	    iov.iov_len = sizeof( long ) + 2 + strlen( bad );
+	    iov.iov_len = SIZEOF_MAC_LONG + 2 + strlen( bad );
 	    break;
 	}
 

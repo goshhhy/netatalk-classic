@@ -17,6 +17,7 @@ pkgconfdir = @PKGCONFDIR@
 	    <$< >$@
 
 GENERATED_FILES = \
+	rc.a2boot.netbsd	\
 	rc.afpd.netbsd		\
 	rc.atalkd.netbsd	\
 	rc.cnid_metad.netbsd	\
@@ -30,6 +31,7 @@ GENERATED_FILES = \
 	timelord.service
 
 TEMPLATES = \
+	rc.a2boot.netbsd.tmpl		\
 	rc.afpd.netbsd.tmpl		\
 	rc.atalkd.netbsd.tmpl		\
 	rc.cnid_metad.netbsd.tmpl	\
@@ -78,7 +80,7 @@ endif
 if USE_NETBSD
 
 sysvdir = /etc/rc.d
-sysv_SCRIPTS = afpd atalkd cnid_metad papd timelord
+sysv_SCRIPTS = a2boot afpd atalkd cnid_metad papd timelord
 
 afpd: rc.afpd.netbsd
 	cp -f $? $@
@@ -98,6 +100,10 @@ papd: rc.papd.netbsd
 
 timelord: rc.timelord.netbsd
 	cp -f $? $@
+	chmod a+x $@
+
+a2boot: rc.a2boot.netbsd
+	cp -f $< $@
 	chmod a+x $@
 
 install-data-hook:
