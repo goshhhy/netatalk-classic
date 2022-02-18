@@ -53,13 +53,6 @@ int markline(struct papfile *pf, char **start, int *linelength,
 		(*crlflength)++;
 	}
 
-	if (!*crlflength) {
-		/* line is way too long, something fishy is going on, give up */
-		LOG(log_error, logtype_papd,
-		    "markline: no crlf in comment, give up");
-		return (-2);
-	}
-
 	/* success, return 1 */
 	return (1);
 }
