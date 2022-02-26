@@ -2126,7 +2126,7 @@ int afp_openvol(AFPObj * obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 	}
 
 	if (volume == NULL) {
-		return AFPERR_PARAM;
+		return AFPERR_NOOBJ;
 	}
 
 	/* check for a volume password */
