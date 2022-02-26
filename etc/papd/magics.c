@@ -81,7 +81,7 @@ int ps(struct papfile *infile, struct papfile *outfile,
 				return (0);
 
 			case -1:
-                spoolreply(outfile, "Processing...");
+				spoolreply(outfile, "Processing...");
 				return (0);
 			}
 
@@ -91,11 +91,10 @@ int ps(struct papfile *infile, struct papfile *outfile,
 					      magics)) != NULL) {
 					compush(comment);
 					continue;	/* top of for (;;) */
+				} else {
+					CONSUME(infile, linelength + crlflength);
+					continue; /* clear out the input queue if client sent data before magic string */
 				}
-			else {
-			    CONSUME(infile, linelength + crlflength);
-			    continue; /* clear out the input queue if client sent data before magic string */
-			}
 #if 0
 				infile->pf_state &= ~PF_BOT;
 
@@ -109,12 +108,12 @@ int ps(struct papfile *infile, struct papfile *outfile,
 #endif
 			}
 
-			/* write to file */
-			lp_write(infile, start, linelength + crlflength);
-			CONSUME(infile, linelength + crlflength);
+                    /* write to file */
+                    lp_write(infile, start, linelength + crlflength);
+                    CONSUME(infile, linelength + crlflength);
 		}
 	}
-    return 0;
+	return 0;
 }
 
 int cm_psquery(struct papfile *in, struct papfile *out,
