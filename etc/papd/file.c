@@ -53,13 +53,6 @@ int markline(struct papfile *pf, char **start, int *linelength,
 		(*crlflength)++;
 	}
 
-	if (!*crlflength) {
-		/* line is way too long, something fishy is going on, give up */
-		LOG(log_error, logtype_papd,
-		    "markline: no crlf in comment, give up");
-		return (-2);
-	}
-
 	/* success, return 1 */
 	return (1);
 }
@@ -110,6 +103,20 @@ void append(struct papfile *pf, const char *data, int len)
 	}
 }
 
+
+void spoolreply(struct papfile *out, char *str)
+{
+    char *pserr1 = "%%[ status: ";
+    char *pserr2 = " ]%%\n";
+
+    if (str == NULL) {
+	str = "Spooler error.";
+    }
+
+    append(out, pserr1, strlen(pserr1));
+    append(out, str, strlen(str));
+    append(out, pserr2, strlen(pserr2));
+}
 
 void spoolerror(struct papfile *out, char *str)
 {
