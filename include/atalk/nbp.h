@@ -43,10 +43,11 @@ struct nbphdr {
     u_int32_t	nh_cnt : 4,
     		nh_op : 4,
 #endif /* BYTE_ORDER */
-    		nh_id;
+    		nh_id : 8;
 };
 
 #define SZ_NBPHDR	2
+
 
 /* NBP tuple described in IAT 7-16 */
 /* struct nbptuple is misnamed; describes only the entity address */
@@ -56,8 +57,7 @@ struct nbptuple {
     u_int8_t    nt_port;
     u_int8_t    nt_enum;
 };
-
-#define SZ_NBPTUPLE	sizeof(struct nbptuple)
+#define SZ_NBPTUPLE	5
 
 #define NBPSTRLEN	32
 /*

@@ -129,6 +129,23 @@ dnl specific configuration comes in here:
 dnl --------------------------------------------------------------------------
 
 
+netatalk_cv_systemd_enable=no
+AC_MSG_CHECKING([for enabling and starting systemd services with make install])
+AC_ARG_ENABLE(systemd-start,
+ 	[  --enable-systemd-start   make install also enables and starts systemd services],[
+        if test x"$enableval" = x"yes"; then
+		AC_DEFINE(SYSTEMD_START, 1, [Define if make install enables systemd services])
+		netatalk_systemd_start=yes
+		AC_MSG_RESULT([no])
+	else
+		AC_DEFINE(SYSTEMD_START, 0, [Define if make install enables systemd services])
+		AC_MSG_RESULT([yes])
+        fi],[
+		AC_DEFINE(SYSTEMD_START, 0, [Define if make install enables systemd services])
+		AC_MSG_RESULT([yes])
+	]
+)
+
 netatalk_cv_admin_group=yes
 AC_MSG_CHECKING([for administrative group support])
 AC_ARG_ENABLE(admin-group,
@@ -450,7 +467,6 @@ fi
 dnl -- check for crypt
 AC_CRYPT
 
-
 dnl --------------------- overwrite the config files . . . or not.
 AC_MSG_CHECKING([whether configuration files should be overwritten])
 AC_ARG_ENABLE(overwrite,
@@ -460,8 +476,8 @@ AC_ARG_ENABLE(overwrite,
 )
 AC_MSG_RESULT([$OVERWRITE_CONFIG])
 
-dnl --------------------- check for LDAP support, for client-side ACL visibility
-AC_MSG_CHECKING(for LDAP (necessary for client-side ACL visibility))
+dnl --------------------- check for LDAP support
+AC_MSG_CHECKING(for LDAP)
 AC_ARG_WITH(ldap,
     [AS_HELP_STRING([--with-ldap],
         [LDAP support (default=auto)])],
@@ -492,106 +508,6 @@ fi
 
 if test x"$with_ldap" = x"yes"; then
 	AC_DEFINE(HAVE_LDAP,1,[Whether LDAP is available])
-fi
-
-dnl --------------------- check for ACL support
-with_acl_support=no
-AC_MSG_CHECKING(whether to support ACLs)
-AC_ARG_WITH(acls,
-    [AS_HELP_STRING([--with-acls],
-        [Include ACL support (default=no)])],
-    [ case "$withval" in
-      yes|no)
-          with_acl_support="$withval"
-		  ;;
-      *)
-          with_acl_support=no
-          ;;
-      esac ],
-    [with_acl_support=no])
-AC_MSG_RESULT($with_acl_support)
-
-if test x"$with_acl_support" = x"no"; then
-	AC_MSG_RESULT(Disabling ACL support)
-	AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support should be built in])
-else
-    with_acl_support=yes
-fi
-
-if test x"$with_acl_support" = x"yes" ; then
-	AC_MSG_NOTICE(checking whether ACL support is available:)
-	case "$host_os" in
-	*)
-		AC_CHECK_LIB(acl,acl_get_file,[ACL_LIBS="$ACL_LIBS -lacl"])
-		case "$host_os" in
-		*linux*)
-			AC_CHECK_LIB(attr,getxattr,[ACL_LIBS="$ACL_LIBS -lattr"])
-			;;
-		esac
-		AC_CACHE_CHECK([for POSIX ACL support],netatalk_cv_HAVE_POSIX_ACLS,[
-			acl_LIBS=$LIBS
-			LIBS="$LIBS $ACL_LIBS"
-			AC_TRY_LINK([
-				#include <sys/types.h>
-				#include <sys/acl.h>
-			],[
-				acl_t acl;
-				int entry_id;
-				acl_entry_t *entry_p;
-				return acl_get_entry(acl, entry_id, entry_p);
-			],
-			[netatalk_cv_HAVE_POSIX_ACLS=yes],
-			[netatalk_cv_HAVE_POSIX_ACLS=no
-                with_acl_support=no])
-			LIBS=$acl_LIBS
-		])
-		if test x"$netatalk_cv_HAVE_POSIX_ACLS" = x"yes"; then
-			AC_MSG_NOTICE(Using POSIX ACLs)
-			AC_DEFINE(HAVE_POSIX_ACLS,1,[Whether POSIX ACLs are available])
-			AC_CACHE_CHECK([for acl_get_perm_np],netatalk_cv_HAVE_ACL_GET_PERM_NP,[
-				acl_LIBS=$LIBS
-				LIBS="$LIBS $ACL_LIBS"
-				AC_TRY_LINK([
-					#include <sys/types.h>
-					#include <sys/acl.h>
-				],[
-					acl_permset_t permset_d;
-					acl_perm_t perm;
-					return acl_get_perm_np(permset_d, perm);
-				],
-				[netatalk_cv_HAVE_ACL_GET_PERM_NP=yes],
-				[netatalk_cv_HAVE_ACL_GET_PERM_NP=no])
-				LIBS=$acl_LIBS
-			])
-			if test x"$netatalk_cv_HAVE_ACL_GET_PERM_NP" = x"yes"; then
-				AC_DEFINE(HAVE_ACL_GET_PERM_NP,1,[Whether acl_get_perm_np() is available])
-			fi
-
-			AC_CACHE_CHECK([for acl_from_mode], netatalk_cv_HAVE_ACL_FROM_MODE,[
-				acl_LIBS=$LIBS
-				LIBS="$LIBS $ACL_LIBS"
-                AC_CHECK_FUNCS(acl_from_mode,
-				[netatalk_cv_HAVE_ACL_FROM_MODE=yes],
-				[netatalk_cv_HAVE_ACL_FROM_MODE=no])
-				LIBS=$acl_LIBS
-			])
-			if test x"netatalk_cv_HAVE_ACL_FROM_MODE" = x"yes"; then
-				AC_DEFINE(HAVE_ACL_FROM_MODE,1,[Whether acl_from_mode() is available])
-			fi
-
-
-		else
-			AC_MSG_NOTICE(ACL support is not avaliable)
-			AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support is available])
-		fi
-		;;
-    esac
-fi
-
-if test x"$with_acl_support" = x"yes" ; then
-   AC_CHECK_HEADERS([acl/libacl.h])
-    AC_DEFINE(HAVE_ACLS,1,[Whether ACLs support is available])
-    AC_SUBST(ACL_LIBS)
 fi
 
 dnl --------------------- check for Extended Attributes support
@@ -652,7 +568,6 @@ AC_SUBST(OVERWRITE_CONFIG)
 AM_CONDITIONAL(COMPILE_TIMELORD, test x$compile_timelord = xyes)
 AM_CONDITIONAL(COMPILE_A2BOOT, test x$compile_a2boot = xyes)
 AM_CONDITIONAL(HAVE_OPENSSL, test x$neta_cv_have_openssl = xyes)
-AM_CONDITIONAL(HAVE_ACLS, test x"$with_acl_support" = x"yes")
 AM_CONDITIONAL(HAVE_LDAP, test x"$with_ldap" = x"yes")
 AM_CONDITIONAL(USE_RANDNUM, test x$neta_cv_have_openssl = xyes)
 AM_CONDITIONAL(USE_PAM_SO, test x$use_pam_so = xyes)
@@ -668,6 +583,7 @@ AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
 AM_CONDITIONAL(USE_SYSTEMD, test x$sysv_style = xsystemd || test x$sysv_style = xredhat-systemd || test x$sysv_style = xsuse-systemd)
 AM_CONDITIONAL(USE_UNDEF, test x$sysv_style = x)
 AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
+AM_CONDITIONAL(SYSTEMD_START, test x$netatalk_systemd_start = xyes)
 
 dnl --------------------- generate files
 

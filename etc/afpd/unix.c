@@ -54,8 +54,7 @@ int ustatfs_getvolspace(const struct vol *vol, VolSpace * bfree,
 		*bfree *= *bsize;
 	}
 
-	*btotal = (VolSpace)
-	    (sfs.f_blocks - (sfs.f_bfree - sfs.f_bavail));
+	*btotal = (VolSpace) sfs.f_blocks;
 
 	/* see similar block above comments */
 	if (*btotal > maxVolSpace / *bsize) {

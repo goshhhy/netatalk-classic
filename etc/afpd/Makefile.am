@@ -35,7 +35,7 @@ afpd_SOURCES = \
 afpd_LDADD =  \
 	$(top_builddir)/libatalk/cnid/libcnid.la \
 	$(top_builddir)/libatalk/libatalk.la \
-	@LIBADD_DL@ @ACL_LIBS@ @PTHREAD_LIBS@
+	@LIBADD_DL@ @PTHREAD_LIBS@
 
 afpd_LDFLAGS = -export-dynamic 
 

@@ -22,32 +22,15 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	if test "x$netatalk_cv_use_shadowpw" = "xyes"; then
         	uams_using_options="$uams_using_options SHADOW"
 	fi
-	if test "x$neta_cv_compile_dhx" = "xyes"; then
-		AC_MSG_RESULT([         DHX     ($uams_using_options)])
-	fi
-        if test "x$neta_cv_compile_dhx2" = "xyes"; then
-                AC_MSG_RESULT([         DHX2    ($uams_using_options)])
-        fi
 	if test "x$neta_cv_have_openssl" = "xyes"; then
 		AC_MSG_RESULT([         RANDNUM (afppasswd)])
-	fi
-	if test x"$netatalk_cv_build_krb5_uam" = x"yes"; then
-		AC_MSG_RESULT([         Kerberos V])
-	fi
-	if test x"$compile_kerberos" = x"yes"; then
-		AC_MSG_RESULT([         Kerberos IV])
-	fi
-	if test x"$compile_pgp" = x"yes"; then
-		AC_MSG_RESULT([         PGP])
 	fi
 	AC_MSG_RESULT([         clrtxt  ($uams_using_options)])
 	AC_MSG_RESULT([         guest])
 	AC_MSG_RESULT([    Options:])
-	AC_MSG_RESULT([         CUPS support:            $netatalk_cv_use_cups])
 dnl	if test x"$netatalk_cv_linux_sendfile" != x; then
 dnl		AC_MSG_RESULT([         Linux sendfile support:  $netatalk_cv_linux_sendfile])
 dnl	fi
-	AC_MSG_RESULT([         quota support:           $netatalk_cv_quotasupport])
 	AC_MSG_RESULT([         admin group support:     $netatalk_cv_admin_group])
 	AC_MSG_RESULT([         valid shell check:       $netatalk_cv_use_shellcheck])
 	AC_MSG_RESULT([         cracklib support:        $netatalk_cv_with_cracklib])
@@ -75,11 +58,6 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 		AC_MSG_RESULT([        LIBS   = $SSL_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $SSL_CFLAGS])
 	fi
-        if test x"$neta_cv_have_libgcrypt" = x"yes"; then
-                AC_MSG_RESULT([    LIBGCRYPT:])
-                AC_MSG_RESULT([        LIBS   = $LIBGCRYPT_LIBS])
-                AC_MSG_RESULT([        CFLAGS = $LIBGCRYPT_CFLAGS])
-        fi
 	if test x"$netatalk_cv_use_pam" = x"yes"; then
 		AC_MSG_RESULT([    PAM:])
 		AC_MSG_RESULT([        LIBS   = $PAM_LIBS])
@@ -94,11 +72,6 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 		AC_MSG_RESULT([    BDB:])
 		AC_MSG_RESULT([        LIBS   = $BDB_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $BDB_CFLAGS])
-	fi
-	if test x"$netatalk_cv_build_krb5_uam" = x"yes"; then
-		AC_MSG_RESULT([    GSSAPI:])
-		AC_MSG_RESULT([        LIBS   = $GSSAPI_LIBS])
-		AC_MSG_RESULT([        CFLAGS = $GSSAPI_CFLAGS])
 	fi
 	if test x"$netatalk_cv_use_cups" = x"yes"; then
 		AC_MSG_RESULT([    CUPS:])

@@ -75,7 +75,7 @@ static char *mtoupath(const struct vol *vol, const char *mpath)
     char         *u;
     size_t       inplen;
     size_t       outlen;
-    uint16_t     flags = CONV_ESCAPEHEX | CONV_ALLOW_COLON;
+    u_int16_t     flags = CONV_ESCAPEHEX | CONV_ALLOW_COLON;
 
     if (!mpath)
         return NULL;
@@ -120,26 +120,30 @@ static int unpack_header(struct ea * restrict ea)
 {
     int ret = 0;
     unsigned int count = 0;
-    uint32_t uint32;
+    u_int16_t u_int16;
+    u_int32_t u_int32;
     char *buf;
 
     /* Check magic and version */
     buf = ea->ea_data;
-    if (*(uint32_t *)buf != htonl(EA_MAGIC)) {
-        LOG(log_error, logtype_afpd, "unpack_header: wrong magic 0x%08x", *(uint32_t *)buf);
+    memcpy(&u_int32, buf, sizeof(u_int32_t));
+    if (u_int32 != htonl(EA_MAGIC)) {
+        LOG(log_error, logtype_afpd, "unpack_header: wrong magic 0x%08x", u_int32);
         ret = -1;
         goto exit;
     }
     buf += 4;
-    if (*(uint16_t *)buf != htons(EA_VERSION)) {
-        LOG(log_error, logtype_afpd, "unpack_header: wrong version 0x%04x", *(uint16_t *)buf);
+    memcpy(&u_int16, buf, sizeof(u_int16_t));
+    if (u_int16 != htons(EA_VERSION)) {
+        LOG(log_error, logtype_afpd, "unpack_header: wrong version 0x%04x", u_int16);
         ret = -1;
         goto exit;
     }
     buf += 2;
 
     /* Get EA count */
-    ea->ea_count = ntohs(*(uint16_t *)buf);
+    memcpy(&u_int16, buf, sizeof(u_int16_t));
+    ea->ea_count = ntohs(u_int16);
     LOG(log_debug, logtype_afpd, "unpack_header: number of EAs: %u", ea->ea_count);
     buf += 2;
 
@@ -156,9 +160,9 @@ static int unpack_header(struct ea * restrict ea)
 
     buf = ea->ea_data + EA_HEADER_SIZE;
     while (count < ea->ea_count) {
-        memcpy(&uint32, buf, 4); /* EA size */
+        memcpy(&u_int32, buf, 4); /* EA size */
         buf += 4;
-        (*(ea->ea_entries))[count].ea_size = ntohl(uint32);
+        (*(ea->ea_entries))[count].ea_size = ntohl(u_int32);
         (*(ea->ea_entries))[count].ea_name = strdup(buf);
         if (! (*(ea->ea_entries))[count].ea_name) {
             LOG(log_error, logtype_afpd, "unpack_header: OOM");
@@ -198,8 +202,8 @@ exit:
 static int pack_header(struct ea * restrict ea)
 {
     unsigned int count = 0, eacount = 0;
-    uint16_t uint16;
-    uint32_t uint32;
+    u_int16_t u_int16;
+    u_int32_t u_int32;
     size_t bufsize = EA_HEADER_SIZE;
 
     char *buf = ea->ea_data + EA_HEADER_SIZE;
@@ -235,8 +239,8 @@ static int pack_header(struct ea * restrict ea)
     ea->ea_size = bufsize;
 
     /* copy count */
-    uint16 = htons(eacount);
-    memcpy(ea->ea_data + EA_COUNT_OFF, &uint16, 2);
+    u_int16 = htons(eacount);
+    memcpy(ea->ea_data + EA_COUNT_OFF, &u_int16, 2);
 
     count = 0;
     buf = ea->ea_data + EA_HEADER_SIZE;
@@ -248,8 +252,8 @@ static int pack_header(struct ea * restrict ea)
         }
 
         /* First: EA size */
-        uint32 = htonl((*(ea->ea_entries))[count].ea_size);
-        memcpy(buf, &uint32, 4);
+        u_int32 = htonl((*(ea->ea_entries))[count].ea_size);
+        memcpy(buf, &u_int32, 4);
         buf += 4;
 
         /* Second: EA name as C-string */
@@ -387,6 +391,8 @@ static int create_ea_header(const char * restrict uname,
 {
     int fd = -1, err = 0;
     char *ptr;
+    u_int16_t u_int16;
+    u_int32_t u_int32;
 
     if ((fd = open(uname, O_RDWR | O_CREAT | O_EXCL, 0666 & ~ea->vol->v_umask)) == -1) {
         LOG(log_error, logtype_afpd, "ea_create: open race condition with ea header for file: %s", uname);
@@ -402,11 +408,15 @@ static int create_ea_header(const char * restrict uname,
 
     /* Now init it */
     ptr = ea->ea_data;
-    *(uint32_t *)ptr = htonl(EA_MAGIC);
+    u_int32 = htonl(EA_MAGIC);
+    memcpy(ptr, &u_int32, sizeof(u_int32_t));
     ptr += EA_MAGIC_LEN;
-    *(uint16_t *)ptr = htons(EA_VERSION);
+
+    u_int16 = htons(EA_VERSION);
+    memcpy(ptr, &u_int16, sizeof(u_int16_t));
     ptr += EA_VERSION_LEN;
-    *(uint16_t *)ptr = 0;       /* count */
+
+    memset(ptr, 0, 2);          /* count */
 
     ea->ea_size = EA_HEADER_SIZE;
     ea->ea_inited = EA_INITED;
@@ -992,7 +1002,7 @@ int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
 {
     int ret = AFPERR_MISC;
     unsigned int count = 0;
-    uint32_t uint32;
+    u_int32_t u_int32;
     struct ea ea;
 
     LOG(log_debug, logtype_afpd, "get_easize: file: %s", uname);
@@ -1008,8 +1018,8 @@ int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
 
     while (count < ea.ea_count) {
         if (strcmp(attruname, (*ea.ea_entries)[count].ea_name) == 0) {
-            uint32 = htonl((*ea.ea_entries)[count].ea_size);
-            memcpy(rbuf, &uint32, 4);
+            u_int32 = htonl((*ea.ea_entries)[count].ea_size);
+            memcpy(rbuf, &u_int32, 4);
             *rbuflen += 4;
             ret = AFP_OK;
 
@@ -1053,7 +1063,7 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 {
     int ret = AFPERR_MISC, fd = -1;
     unsigned int count = 0;
-    uint32_t uint32;
+    u_int32_t u_int32;
     size_t toread;
     struct ea ea;
     char *eafile;
@@ -1089,8 +1099,8 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
             LOG(log_debug, logtype_afpd, "get_eacontent('%s'): sending %u bytes", attruname, toread);
 
             /* Put length of EA data in reply buffer */
-            uint32 = htonl(toread);
-            memcpy(rbuf, &uint32, 4);
+            u_int32 = htonl(toread);
+            memcpy(rbuf, &u_int32, 4);
             rbuf += 4;
             *rbuflen += 4;
 

@@ -33,7 +33,6 @@
 #include <atalk/util.h>
 #include <atalk/compat.h>
 #include <atalk/globals.h>
-#include <atalk/fce_api.h>
 
 #include "status.h"
 #include "auth.h"
@@ -194,7 +193,6 @@ void afp_options_init(struct afp_options *options)
 	options->tcp_sndbuf = 0;	/* 0 means don't change OS default */
 	options->tcp_rcvbuf = 0;	/* 0 means don't change OS default */
 	options->mimicmodel = NULL;
-	options->fce_fmodwait = 60;	/* put fmod events 60 seconds on hold */
 	options->adminauthuser = NULL;
 }
 

@@ -34,7 +34,6 @@
 #include <atalk/bstradd.h>
 #include <atalk/ftw.h>
 #include <atalk/globals.h>
-#include <atalk/fce_api.h>
 #include <atalk/errchk.h>
 
 #ifdef CNID_DB
@@ -1390,8 +1389,6 @@ static int getvolspace(struct vol *vol,
 	return (AFP_OK);
 }
 
-#define FCE_TM_DELTA 10		/* send notification every 10 seconds */
-
 /* -----------------------
  * set volume creation date
  * avoid duplicate, well at least it tries
@@ -2089,7 +2086,7 @@ int afp_openvol(AFPObj * obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 	}
 
 	if (volume == NULL) {
-		return AFPERR_PARAM;
+		return AFPERR_NOOBJ;
 	}
 
 	/* check for a volume password */
