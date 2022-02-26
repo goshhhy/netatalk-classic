@@ -34,7 +34,6 @@
 #include <atalk/bstradd.h>
 #include <atalk/ftw.h>
 #include <atalk/globals.h>
-#include <atalk/fce_api.h>
 #include <atalk/errchk.h>
 
 #ifdef CNID_DB
@@ -1429,8 +1428,6 @@ static int getvolspace(struct vol *vol,
 	*btotal = MIN(*xbtotal, maxsize);
 	return (AFP_OK);
 }
-
-#define FCE_TM_DELTA 10		/* send notification every 10 seconds */
 
 /* -----------------------
  * set volume creation date
