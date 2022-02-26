@@ -47,7 +47,7 @@ int ps(struct papfile *infile, struct papfile *outfile,
 			state = 1;
 		}
 
-		if ( infile->pf_state & PF_QUERY ) {
+		if (infile->pf_state & PF_QUERY) {
 			infile->pf_state |= PF_BOT;
 		}
 		if ((comment = compeek())) {
@@ -125,7 +125,7 @@ int cm_psquery(struct papfile *in, struct papfile *out,
 	int linelength, crlflength;
 
 	for (;;) {
-        if ( in->pf_state & PF_QUERY )
+        if (in->pf_state & PF_QUERY)
         {
             /* handle eof at end of query job */
             compop();

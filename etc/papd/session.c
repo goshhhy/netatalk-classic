@@ -62,8 +62,8 @@ int session(ATP atp, struct sockaddr_at *sat)
 	int i, cc, timeout = 0, readpending = 0;
 	u_int16_t seq = 0, rseq = 1, netseq;
 	u_char readport;	/* uninitialized, OK 310105 */
-    char *start;
-    int linelength, lflength;
+	char *start;
+	int linelength, lflength;
 
 	infile.pf_state = PF_BOT;
 	infile.pf_bufsize = 0;
