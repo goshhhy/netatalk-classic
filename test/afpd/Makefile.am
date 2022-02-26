@@ -45,12 +45,8 @@ test_SOURCES =  test.c subtests.c afpfunc_helpers.c \
 				$(top_builddir)/etc/afpd/unix.c \
 				$(top_builddir)/etc/afpd/volume.c
 
-if HAVE_ACLS
-test_SOURCES += $(top_builddir)/etc/afpd/acls.c
-endif
-
 test_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/etc/afpd \
-	 @SLP_CFLAGS@ @ZEROCONF_CFLAGS@ \
+	 @SLP_CFLAGS@ \
 	 -DAPPLCNAME \
 	 -DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	 -D_PATH_AFPDDEFVOL=\"$(pkgconfdir)/AppleVolumes.default\" \
@@ -58,12 +54,11 @@ test_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/etc/afpd \
 	 -D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
 	 -D_PATH_AFPDCONF=\"$(pkgconfdir)/afpd.conf\" \
 	 -D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
-	 -D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/afp_ldap.conf\" \
 	 -D_PATH_AFPDSIGCONF=\"$(pkgconfdir)/afp_signature.conf\" \
 	 -D_PATH_AFPDUUIDCONF=\"$(pkgconfdir)/afp_voluuid.conf\"
 
 test_LDADD = $(top_builddir)/libatalk/cnid/libcnid.la \
 	$(top_builddir)/libatalk/libatalk.la \
-	@QUOTA_LIBS@ @SLP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @PTHREAD_LIBS@
+	@SLP_LIBS@ @LIBADD_DL@ @PTHREAD_LIBS@
 
 test_LDFLAGS = -export-dynamic

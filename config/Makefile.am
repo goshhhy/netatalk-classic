@@ -23,10 +23,6 @@ else
 CONFFILES = AppleVolumes.system netatalk.conf
 endif
 
-if HAVE_ACLS
-CONFFILES += afp_ldap.conf
-endif
-
 CONFFILES += atalkd.conf papd.conf
 
 pkgconfdir = @PKGCONFDIR@
