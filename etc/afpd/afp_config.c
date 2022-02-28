@@ -222,9 +222,10 @@ static AFPConfig *AFPConfigInit(struct afp_options *options,
 	config = ASPConfigInit(options, refcount);
 	if (config == NULL) {
 		LOG(log_error, logtype_afpd,
-		    "AFPConfigInit: ASPConfigInit() returned NULL");
+		    "AFPConfig: ASPConfigInit() returned NULL");
 		return NULL;
 	}
+	config->defoptions = defoptions;
 
 	/* set signature */
 	set_signature(options);
