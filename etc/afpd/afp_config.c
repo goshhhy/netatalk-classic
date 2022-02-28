@@ -219,9 +219,12 @@ static AFPConfig *AFPConfigInit(struct afp_options *options,
 	}
 
 	/* handle asp transports */
-	if ((options->transports & AFPTRANS_DDP) &&
-	    (config = ASPConfigInit(options, refcount)))
-		config->defoptions = defoptions;
+	config = ASPConfigInit(options, refcount);
+	if (config == NULL) {
+		LOG(log_error, logtype_afpd,
+		    "AFPConfigInit: ASPConfigInit() returned NULL");
+		return NULL;
+	}
 
 	/* set signature */
 	set_signature(options);
