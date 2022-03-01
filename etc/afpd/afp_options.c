@@ -618,15 +618,6 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
 			options->passwdbits |= PASSWD_SET;
 			break;
 
-		case 'D':
-			options->transports &= ~AFPTRANS_DDP;
-			break;
-		case 'S':
-			options->port = optarg;
-			break;
-		case 'T':
-			options->transports &= ~AFPTRANS_TCP;
-			break;
 		case 'L':
 			options->loginmesg = optarg;
 			break;
