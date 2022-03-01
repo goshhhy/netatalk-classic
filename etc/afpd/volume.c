@@ -1418,7 +1418,7 @@ static int getvolparams(u_int16_t bitmap, struct vol *vol, struct stat *st,
 	struct adouble ad;
 	int bit = 0, isad = 1;
 	u_int32_t aint;
-	u_short ashort;
+	u_int16_t ashort;
 	u_int32_t bfree, btotal, bsize;
 	VolSpace xbfree, xbtotal;	/* extended bytes */
 	char *data, *nameoff = NULL;
