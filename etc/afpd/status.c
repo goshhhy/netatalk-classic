@@ -562,7 +562,8 @@ void set_signature(struct afp_options *options)
 				} else {
 					fseek(fp, -1L, SEEK_END);
 					if (fgetc(fp) != '\n') {
-						fflush(fp);
+						/* Required -  C11 7.21.5.3p7 */
+						fseek(fp, 0L, SEEK_END);
 						fputc('\n', fp);	/* last char is \n? */
 					}
 					goto server_signature_random;
