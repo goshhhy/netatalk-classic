@@ -164,7 +164,6 @@ void afp_options_init(struct afp_options *options)
 	options->uamlist = "uams_randnum.so,uams_clrtxt.so,uams_guest.so";
 	options->guest = "nobody";
 	options->loginmesg = "";
-	options->transports = AFPTRANS_DDP;	/*  DDP only */
 	options->passwdfile = _PATH_AFPDPWFILE;
 	options->tickleval = 30;
 	options->timeout = 4;	/* 4 tickles = 2 minutes */
